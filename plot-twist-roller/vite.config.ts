@@ -6,7 +6,7 @@ export default defineConfig({
   plugins: [react()],
   base: '/PlotTwistDiceRoller/',  // GitHub Pages base path
   build: {
-    outDir: 'docs',  // Output to docs/ folder for GitHub Pages
+    outDir: '../docs',  // Output to repository root docs/ folder for GitHub Pages
     emptyOutDir: true,
   },
 })
