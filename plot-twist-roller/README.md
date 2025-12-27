@@ -39,17 +39,11 @@ npm run preview
 
 ## 🌐 GitHub Pages Deployment
 
-### Automatic Deployment (Recommended)
-
-The app is configured to automatically deploy to GitHub Pages when you push to the `main` branch.
+The app is pre-built and ready to deploy using the traditional `docs/` folder method.
 
 **Setup Steps:**
 
-1. **Enable GitHub Pages** in your repository:
-   - Go to `Settings` → `Pages`
-   - Under "Source", select `GitHub Actions`
-
-2. **Merge to main branch**:
+1. **Merge to main branch**:
    ```bash
    # From your feature branch
    git checkout main
@@ -57,22 +51,32 @@ The app is configured to automatically deploy to GitHub Pages when you push to t
    git push origin main
    ```
 
+2. **Enable GitHub Pages** in your repository:
+   - Go to `Settings` → `Pages`
+   - Under "Source", select **`Deploy from a branch`**
+   - Select branch: **`main`**
+   - Select folder: **`/docs`**
+   - Click **`Save`**
+
 3. **Access your deployed app**:
-   - The workflow will automatically build and deploy
    - Your app will be available at: `https://samuelcryan.github.io/PlotTwistDiceRoller/`
-   - Check the "Actions" tab to monitor deployment progress
+   - It may take 1-2 minutes for the first deployment
 
-### Manual Deployment
+### Updating the Deployed App
 
-If you prefer manual control:
+When you make changes:
 
 ```bash
-# Build the production version
+# Build the updated version
 npm run build
 
-# The built files are in the dist/ folder
-# You can deploy this folder to any static hosting service
+# Commit and push the updated docs/ folder
+git add docs/
+git commit -m "Update app"
+git push origin main
 ```
+
+GitHub Pages will automatically serve the updated files within a few minutes.
 
 ## 📖 How to Use
 

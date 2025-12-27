@@ -5,4 +5,8 @@ import react from '@vitejs/plugin-react'
 export default defineConfig({
   plugins: [react()],
   base: '/PlotTwistDiceRoller/',  // GitHub Pages base path
+  build: {
+    outDir: 'docs',  // Output to docs/ folder for GitHub Pages
+    emptyOutDir: true,
+  },
 })
