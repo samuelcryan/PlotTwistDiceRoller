@@ -199,6 +199,6 @@ This project is open source and available for personal use.
 
 ## 🔗 Links
 
-- **Story Document**: See `/docs/PlotTwistStoryDocument` for power mechanics
-- **Trope List**: See `/docs/TropeList.md` for complete trope reference
+- **Story Document**: See `/reference/PlotTwistStoryDocument` for power mechanics
+- **Trope List**: See `/reference/TropeList.md` for complete trope reference
 - **Repository**: [PlotTwistDiceRoller](https://github.com/samuelcryan/PlotTwistDiceRoller)
