@@ -105,7 +105,7 @@ export const TROPE_DESCRIPTIONS: { [tropeName: string]: string } = {
   "Status-Buff Dispel": "Ability to strip away beneficial enhancements from opponents. Nullification of enemy advantages.",
   "Choke Holds": "Specialized grappling techniques that restrict breathing or blood flow. Submission through controlled strangulation.",
   "Combat Commentator": "Provides running commentary on ongoing combat as it happens. Real-time analysis and narration of battle.",
-  "Annoying Arrows": "Arrow wounds prove superficial and easily extracted without serious consequence. Projectiles more irritating than dangerous.",
+  "Annoying Arrows": "Arrow wounds prove superficial and easily extracted without serious consequence. Projectiles more irritating than dangerous. Note: Also applies to low caliber bullets.",
   "Confusion Fu": "Completely unpredictable fighting style that's difficult to counter. Randomness itself becomes the strategy.",
   "Weak but Skilled": "Limited raw power compensated by superior technique and timing. Efficiency over brute force.",
   "Fighting Dirty": "Using unconventional tactics like eye gouges, groin strikes, and sand throwing. Anything goes.",

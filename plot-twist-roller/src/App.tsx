@@ -261,6 +261,26 @@ function App() {
     setPendingRoll(pending);
   };
 
+  // Apply bonus modifier to a trope
+  const applyBonusModifier = (rollId: number, applyTo: 'intensity' | 'longevity') => {
+    if (!bonusModifier) return;
+
+    setRolls(prev => prev.map(roll => {
+      if (roll.id === rollId) {
+        if (applyTo === 'intensity') {
+          return { ...roll, intensity: Math.min(20, roll.intensity + 1) };
+        } else {
+          return { ...roll, longevity: Math.min(20, roll.longevity + 1) };
+        }
+      }
+      return roll;
+    }));
+
+    // Clear the bonus modifier after use
+    setBonusModifier(null);
+    alert(`Bonus modifier applied! ${applyTo === 'intensity' ? 'Intensity' : 'Longevity'} increased by 1.`);
+  };
+
   // Save game
   const saveGame = () => {
     const gameState = {
@@ -478,24 +498,11 @@ function App() {
 
         {/* Bonus Modifier Display */}
         {bonusModifier && (
-          <div className="bg-gradient-to-br from-yellow-50 to-amber-50 rounded-xl shadow-lg p-3 border-2 border-yellow-400">
-            <div className="flex items-center gap-2 mb-2">
-              <span className="text-2xl">🎉</span>
-              <h3 className="text-lg font-bold bg-gradient-to-r from-yellow-600 to-amber-600 bg-clip-text text-transparent">
-                Bonus Modifier Active
-              </h3>
-            </div>
-            <div className="bg-white p-3 rounded-lg border border-yellow-300 shadow-sm">
-              <p className="font-bold text-base text-gray-800 mb-1">{bonusModifier.name}</p>
-              <p className="text-xs text-gray-700 mb-2">{bonusModifier.description}</p>
-              <div className="flex items-center justify-between">
-                <p className="text-xs text-gray-500">Earned on Day {bonusModifier.dayEarned}</p>
-                <span className="px-2 py-0.5 bg-yellow-100 text-yellow-800 text-xs font-semibold rounded-full">
-                  Ready
-                </span>
-              </div>
-            </div>
-          </div>
+          <BonusModifierComponent
+            bonusModifier={bonusModifier}
+            activeRolls={activeRolls}
+            onApplyBonus={applyBonusModifier}
+          />
         )}
 
         {/* Banked Tropes */}
@@ -605,6 +612,92 @@ function App() {
             )}
           </div>
         </div>
+      </div>
+    </div>
+  );
+}
+
+// Bonus Modifier Component
+function BonusModifierComponent({ bonusModifier, activeRolls, onApplyBonus }: any) {
+  const [selectedTropeId, setSelectedTropeId] = useState<number | null>(null);
+  const [applyTo, setApplyTo] = useState<'intensity' | 'longevity'>('intensity');
+
+  const handleApply = () => {
+    if (selectedTropeId === null) {
+      alert('Please select a trope to apply the bonus modifier to.');
+      return;
+    }
+    onApplyBonus(selectedTropeId, applyTo);
+  };
+
+  return (
+    <div className="bg-gradient-to-br from-yellow-50 to-amber-50 rounded-xl shadow-lg p-3 border-2 border-yellow-400">
+      <div className="flex items-center gap-2 mb-2">
+        <span className="text-2xl">🎉</span>
+        <h3 className="text-lg font-bold bg-gradient-to-r from-yellow-600 to-amber-600 bg-clip-text text-transparent">
+          Bonus Modifier Ready
+        </h3>
+      </div>
+      <div className="bg-white p-3 rounded-lg border border-yellow-300 shadow-sm">
+        <p className="font-bold text-base text-gray-800 mb-1">{bonusModifier.name}</p>
+        <p className="text-xs text-gray-700 mb-3">{bonusModifier.description}</p>
+
+        {activeRolls.length > 0 ? (
+          <>
+            <div className="mb-2">
+              <label className="block text-xs font-bold text-gray-700 mb-1">Select Trope:</label>
+              <select
+                value={selectedTropeId || ''}
+                onChange={(e) => setSelectedTropeId(Number(e.target.value))}
+                className="w-full p-2 border border-gray-300 text-xs rounded-lg focus:border-yellow-500 focus:ring-1 focus:ring-yellow-200"
+              >
+                <option value="">-- Choose a trope --</option>
+                {activeRolls.map((roll: any) => (
+                  <option key={roll.id} value={roll.id}>
+                    {roll.trope} (Int: {roll.intensity}, Long: {roll.longevity})
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="mb-3">
+              <label className="block text-xs font-bold text-gray-700 mb-1">Apply to:</label>
+              <div className="flex gap-3">
+                <label className="flex items-center gap-1 cursor-pointer">
+                  <input
+                    type="radio"
+                    name="applyTo"
+                    value="intensity"
+                    checked={applyTo === 'intensity'}
+                    onChange={(e) => setApplyTo(e.target.value as 'intensity' | 'longevity')}
+                    className="w-4 h-4 text-yellow-600"
+                  />
+                  <span className="text-xs font-medium text-gray-700">Intensity (+1)</span>
+                </label>
+                <label className="flex items-center gap-1 cursor-pointer">
+                  <input
+                    type="radio"
+                    name="applyTo"
+                    value="longevity"
+                    checked={applyTo === 'longevity'}
+                    onChange={(e) => setApplyTo(e.target.value as 'intensity' | 'longevity')}
+                    className="w-4 h-4 text-yellow-600"
+                  />
+                  <span className="text-xs font-medium text-gray-700">Longevity (+1)</span>
+                </label>
+              </div>
+            </div>
+
+            <button
+              onClick={handleApply}
+              className="w-full px-4 py-2 bg-gradient-to-r from-yellow-600 to-amber-600 text-white font-bold text-sm rounded-lg hover:from-yellow-700 hover:to-amber-700 shadow-md hover:shadow-lg transition-all"
+            >
+              ⚡ Apply Bonus Modifier
+            </button>
+          </>
+        ) : (
+          <p className="text-xs text-gray-500 italic">No active tropes to apply bonus to. Pull a trope first!</p>
+        )}
       </div>
     </div>
   );
@@ -758,11 +851,14 @@ function PendingRollComponent({ pendingRoll, onFail, onBank, onApply, formatEffe
 // Trope Card Component
 function TropeCard({ roll, onToggleExpired, onDelete, onCollectRefund, formatEffectDescription, showRefund }: any) {
   const refund = showRefund ? calculateRefund(roll.intensity, roll.longevity) : 0;
+  const isPermanent = roll.longevity === 20;
 
   return (
     <div className={`rounded-lg p-3 border shadow-md hover:shadow-lg transition-all ${
       roll.expired
         ? 'border-gray-400 bg-gradient-to-br from-gray-50 to-gray-100'
+        : isPermanent
+        ? 'border-purple-500 bg-gradient-to-br from-purple-100 to-indigo-100'
         : 'border-purple-400 bg-gradient-to-br from-purple-50 to-indigo-50'
     }`}>
       <div className="flex justify-between items-start mb-2">
@@ -785,16 +881,23 @@ function TropeCard({ roll, onToggleExpired, onDelete, onCollectRefund, formatEff
           )}
         </div>
         <div className="flex gap-1">
-          <button
-            onClick={() => onToggleExpired(roll.id)}
-            className={`px-2 py-1 text-xs font-medium rounded-md shadow-sm hover:shadow-md transition-all ${
-              roll.expired
-                ? 'bg-gradient-to-r from-green-600 to-emerald-600 text-white hover:from-green-700 hover:to-emerald-700'
-                : 'bg-gradient-to-r from-gray-600 to-gray-700 text-white hover:from-gray-700 hover:to-gray-800'
-            }`}
-          >
-            {roll.expired ? '♻️' : '💤'}
-          </button>
+          {!isPermanent && (
+            <button
+              onClick={() => onToggleExpired(roll.id)}
+              className={`px-2 py-1 text-xs font-medium rounded-md shadow-sm hover:shadow-md transition-all ${
+                roll.expired
+                  ? 'bg-gradient-to-r from-green-600 to-emerald-600 text-white hover:from-green-700 hover:to-emerald-700'
+                  : 'bg-gradient-to-r from-gray-600 to-gray-700 text-white hover:from-gray-700 hover:to-gray-800'
+              }`}
+            >
+              {roll.expired ? '♻️' : '💤'}
+            </button>
+          )}
+          {isPermanent && (
+            <span className="px-2 py-1 text-xs font-bold text-purple-700 bg-purple-200 rounded-md">
+              ∞ Permanent
+            </span>
+          )}
           <button
             onClick={() => onDelete(roll.id)}
             className="px-2 py-1 bg-gradient-to-r from-red-600 to-red-700 text-white text-xs font-medium rounded-md hover:from-red-700 hover:to-red-800 shadow-sm hover:shadow-md transition-all"
