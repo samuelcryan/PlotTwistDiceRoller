@@ -299,6 +299,34 @@ function App() {
             }
             break;
 
+          case 'reroll':
+            // Reroll the selected die (intensity or longevity)
+            const newRoll = rollDie();
+            if (applyTo === 'intensity') {
+              // Figure out which original die was used for intensity
+              const wasUsingDie1 = roll.intensity === roll.die1;
+              if (wasUsingDie1) {
+                updatedRoll.die1 = newRoll;
+                updatedRoll.intensity = newRoll;
+              } else {
+                updatedRoll.die2 = newRoll;
+                updatedRoll.intensity = newRoll;
+              }
+              message = `Intensity die rerolled! New value: ${newRoll}.`;
+            } else {
+              // Figure out which original die was used for longevity
+              const wasUsingDie1 = roll.longevity === roll.die1;
+              if (wasUsingDie1) {
+                updatedRoll.die1 = newRoll;
+                updatedRoll.longevity = newRoll;
+              } else {
+                updatedRoll.die2 = newRoll;
+                updatedRoll.longevity = newRoll;
+              }
+              message = `Longevity die rerolled! New value: ${newRoll}.`;
+            }
+            break;
+
           case 'swap':
             // Swap intensity and longevity
             updatedRoll.intensity = roll.longevity;
@@ -311,6 +339,23 @@ function App() {
             const originalLongevity = roll.intensity === roll.die1 ? roll.die2 : roll.die1;
             updatedRoll.longevity = originalLongevity;
             message = `Duration refreshed! Longevity reset to ${updatedRoll.longevity}.`;
+            break;
+
+          case 'expire':
+            // Mark the trope as expired
+            updatedRoll.expired = true;
+            message = 'Trope has been marked as expired.';
+            break;
+
+          case 'retarget':
+            // This needs special UI to change the target - for now just show a message
+            const newTarget = prompt('Enter new target name:', roll.appliedTo);
+            if (newTarget && newTarget.trim()) {
+              updatedRoll.appliedTo = newTarget.trim();
+              message = `Target changed to: ${newTarget.trim()}.`;
+            } else {
+              return roll; // No change if cancelled
+            }
             break;
 
           default:
@@ -677,7 +722,7 @@ function BonusModifierComponent({ bonusModifier, activeRolls, onApplyBonus }: an
 
   // Determine if this bonus requires choosing a stat
   const requiresChoice = ['plus3', 'minus5', 'reroll'].includes(bonusModifier.type);
-  const isAutomatic = ['permanent', 'swap', 'refresh'].includes(bonusModifier.type);
+  const isAutomatic = ['permanent', 'swap', 'refresh', 'expire', 'retarget'].includes(bonusModifier.type);
 
   const handleApply = () => {
     if (selectedTropeId === null) {
@@ -692,6 +737,7 @@ function BonusModifierComponent({ bonusModifier, activeRolls, onApplyBonus }: an
     switch (bonusModifier.type) {
       case 'plus3': return `${stat === 'intensity' ? 'Intensity' : 'Longevity'} (+3)`;
       case 'minus5': return `${stat === 'intensity' ? 'Intensity' : 'Longevity'} (-5)`;
+      case 'reroll': return `Reroll ${stat === 'intensity' ? 'Intensity' : 'Longevity'} Die`;
       default: return `${stat === 'intensity' ? 'Intensity' : 'Longevity'} (+1)`;
     }
   };
