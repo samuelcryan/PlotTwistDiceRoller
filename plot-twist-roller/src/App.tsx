@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import type { Roll, BonusModifier, PendingRoll } from './types';
-import { TROPE_DESCRIPTIONS } from './data/descriptions';
+import { TROPE_DESCRIPTIONS } from './data/tropes';
 import {
   rollDie,
   getRandomTrope,
