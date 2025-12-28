@@ -262,23 +262,76 @@ function App() {
   };
 
   // Apply bonus modifier to a trope
-  const applyBonusModifier = (rollId: number, applyTo: 'intensity' | 'longevity') => {
+  const applyBonusModifier = (rollId: number, applyTo: 'intensity' | 'longevity' | 'auto') => {
     if (!bonusModifier) return;
 
     setRolls(prev => prev.map(roll => {
       if (roll.id === rollId) {
-        if (applyTo === 'intensity') {
-          return { ...roll, intensity: Math.min(20, roll.intensity + 1) };
-        } else {
-          return { ...roll, longevity: Math.min(20, roll.longevity + 1) };
+        let updatedRoll = { ...roll, bonusApplied: true };
+        let message = '';
+
+        switch (bonusModifier.type) {
+          case 'permanent':
+            // Set longevity to 20 (true permanent)
+            updatedRoll.longevity = 20;
+            message = 'Trope is now permanent! Longevity set to 20.';
+            break;
+
+          case 'plus3':
+            // Add +3 to selected stat (max 19)
+            if (applyTo === 'intensity') {
+              updatedRoll.intensity = Math.min(19, roll.intensity + 3);
+              message = `Intensity increased by 3 to ${updatedRoll.intensity}.`;
+            } else {
+              updatedRoll.longevity = Math.min(20, roll.longevity + 3);
+              message = `Longevity increased by 3 to ${updatedRoll.longevity}.`;
+            }
+            break;
+
+          case 'minus5':
+            // Subtract 5 from selected stat (min 2)
+            if (applyTo === 'intensity') {
+              updatedRoll.intensity = Math.max(2, roll.intensity - 5);
+              message = `Intensity decreased by 5 to ${updatedRoll.intensity}.`;
+            } else {
+              updatedRoll.longevity = Math.max(2, roll.longevity - 5);
+              message = `Longevity decreased by 5 to ${updatedRoll.longevity}.`;
+            }
+            break;
+
+          case 'swap':
+            // Swap intensity and longevity
+            updatedRoll.intensity = roll.longevity;
+            updatedRoll.longevity = roll.intensity;
+            message = `Intensity and Longevity swapped! Now Int: ${updatedRoll.intensity}, Long: ${updatedRoll.longevity}.`;
+            break;
+
+          case 'refresh':
+            // Reset longevity to original die value
+            const originalLongevity = roll.intensity === roll.die1 ? roll.die2 : roll.die1;
+            updatedRoll.longevity = originalLongevity;
+            message = `Duration refreshed! Longevity reset to ${updatedRoll.longevity}.`;
+            break;
+
+          default:
+            // Generic +1 for unknown types
+            if (applyTo === 'intensity') {
+              updatedRoll.intensity = Math.min(20, roll.intensity + 1);
+              message = `Intensity increased by 1 to ${updatedRoll.intensity}.`;
+            } else {
+              updatedRoll.longevity = Math.min(20, roll.longevity + 1);
+              message = `Longevity increased by 1 to ${updatedRoll.longevity}.`;
+            }
         }
+
+        alert(`Bonus modifier applied! ${message}`);
+        return updatedRoll;
       }
       return roll;
     }));
 
     // Clear the bonus modifier after use
     setBonusModifier(null);
-    alert(`Bonus modifier applied! ${applyTo === 'intensity' ? 'Intensity' : 'Longevity'} increased by 1.`);
   };
 
   // Save game
@@ -622,12 +675,25 @@ function BonusModifierComponent({ bonusModifier, activeRolls, onApplyBonus }: an
   const [selectedTropeId, setSelectedTropeId] = useState<number | null>(null);
   const [applyTo, setApplyTo] = useState<'intensity' | 'longevity'>('intensity');
 
+  // Determine if this bonus requires choosing a stat
+  const requiresChoice = ['plus3', 'minus5', 'reroll'].includes(bonusModifier.type);
+  const isAutomatic = ['permanent', 'swap', 'refresh'].includes(bonusModifier.type);
+
   const handleApply = () => {
     if (selectedTropeId === null) {
       alert('Please select a trope to apply the bonus modifier to.');
       return;
     }
-    onApplyBonus(selectedTropeId, applyTo);
+    onApplyBonus(selectedTropeId, isAutomatic ? 'auto' : applyTo);
+  };
+
+  // Get descriptive text for the bonus effect
+  const getEffectLabel = (stat: 'intensity' | 'longevity') => {
+    switch (bonusModifier.type) {
+      case 'plus3': return `${stat === 'intensity' ? 'Intensity' : 'Longevity'} (+3)`;
+      case 'minus5': return `${stat === 'intensity' ? 'Intensity' : 'Longevity'} (-5)`;
+      default: return `${stat === 'intensity' ? 'Intensity' : 'Longevity'} (+1)`;
+    }
   };
 
   return (
@@ -660,33 +726,43 @@ function BonusModifierComponent({ bonusModifier, activeRolls, onApplyBonus }: an
               </select>
             </div>
 
-            <div className="mb-3">
-              <label className="block text-xs font-bold text-gray-700 mb-1">Apply to:</label>
-              <div className="flex gap-3">
-                <label className="flex items-center gap-1 cursor-pointer">
-                  <input
-                    type="radio"
-                    name="applyTo"
-                    value="intensity"
-                    checked={applyTo === 'intensity'}
-                    onChange={(e) => setApplyTo(e.target.value as 'intensity' | 'longevity')}
-                    className="w-4 h-4 text-yellow-600"
-                  />
-                  <span className="text-xs font-medium text-gray-700">Intensity (+1)</span>
-                </label>
-                <label className="flex items-center gap-1 cursor-pointer">
-                  <input
-                    type="radio"
-                    name="applyTo"
-                    value="longevity"
-                    checked={applyTo === 'longevity'}
-                    onChange={(e) => setApplyTo(e.target.value as 'intensity' | 'longevity')}
-                    className="w-4 h-4 text-yellow-600"
-                  />
-                  <span className="text-xs font-medium text-gray-700">Longevity (+1)</span>
-                </label>
+            {requiresChoice && (
+              <div className="mb-3">
+                <label className="block text-xs font-bold text-gray-700 mb-1">Apply to:</label>
+                <div className="flex gap-3">
+                  <label className="flex items-center gap-1 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="applyTo"
+                      value="intensity"
+                      checked={applyTo === 'intensity'}
+                      onChange={(e) => setApplyTo(e.target.value as 'intensity' | 'longevity')}
+                      className="w-4 h-4 text-yellow-600"
+                    />
+                    <span className="text-xs font-medium text-gray-700">{getEffectLabel('intensity')}</span>
+                  </label>
+                  <label className="flex items-center gap-1 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="applyTo"
+                      value="longevity"
+                      checked={applyTo === 'longevity'}
+                      onChange={(e) => setApplyTo(e.target.value as 'intensity' | 'longevity')}
+                      className="w-4 h-4 text-yellow-600"
+                    />
+                    <span className="text-xs font-medium text-gray-700">{getEffectLabel('longevity')}</span>
+                  </label>
+                </div>
               </div>
-            </div>
+            )}
+
+            {isAutomatic && (
+              <div className="mb-3 bg-yellow-100 border border-yellow-400 rounded-lg p-2">
+                <p className="text-xs font-semibold text-yellow-800">
+                  ℹ️ This bonus will be applied automatically to the selected trope.
+                </p>
+              </div>
+            )}
 
             <button
               onClick={handleApply}
@@ -877,6 +953,11 @@ function TropeCard({ roll, onToggleExpired, onDelete, onCollectRefund, formatEff
           {roll.rerolledFrom1 && (
             <span className="px-2 py-0.5 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-full text-xs font-medium shadow-sm">
               ⚠️ Reroll
+            </span>
+          )}
+          {roll.bonusApplied && (
+            <span className="px-2 py-0.5 bg-gradient-to-r from-green-500 to-emerald-500 text-white rounded-full text-xs font-medium shadow-sm">
+              ✨ Bonus Applied
             </span>
           )}
         </div>

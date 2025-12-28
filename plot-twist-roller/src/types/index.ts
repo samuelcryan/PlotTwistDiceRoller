@@ -15,6 +15,7 @@ export interface Roll {
   appliedTo?: string;
   rerolledFrom1?: boolean;
   rerolledFrom20?: boolean;
+  bonusApplied?: boolean; // True if a bonus modifier has been applied to this trope
 }
 
 export type BonusModifierType =
