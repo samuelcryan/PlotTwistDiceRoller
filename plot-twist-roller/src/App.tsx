@@ -549,28 +549,28 @@ function App() {
                   key={segment}
                   className={`flex-1 h-10 rounded-lg border-2 transition-all duration-300 relative overflow-hidden ${
                     isFullyAvailable
-                      ? 'border-purple-600 shadow-md'
+                      ? 'border-yellow-600 shadow-md'
                       : isFullyFilled
-                      ? 'border-gray-600 shadow-md'
+                      ? 'border-orange-600 shadow-md'
                       : 'border-gray-300'
                   }`}
                 >
                   {/* Background fill with opacity for partial charges */}
                   {isFullyAvailable && (
-                    <div className="absolute inset-0 bg-gradient-to-br from-purple-500 to-indigo-600" />
+                    <div className="absolute inset-0 bg-gradient-to-br from-yellow-600 to-amber-600" />
                   )}
                   {isPartiallyAvailable && (
                     <div
-                      className="absolute inset-0 bg-gradient-to-br from-purple-500 to-indigo-600"
+                      className="absolute inset-0 bg-gradient-to-br from-yellow-600 to-amber-600"
                       style={{ opacity: availableOpacity }}
                     />
                   )}
                   {!isPartiallyAvailable && isFullyFilled && (
-                    <div className="absolute inset-0 bg-gradient-to-br from-gray-600 to-gray-800" />
+                    <div className="absolute inset-0 bg-gradient-to-br from-orange-600 to-orange-800" />
                   )}
                   {!isPartiallyAvailable && isPartiallyLocked && (
                     <div
-                      className="absolute inset-0 bg-gradient-to-br from-gray-600 to-gray-800"
+                      className="absolute inset-0 bg-gradient-to-br from-orange-600 to-orange-800"
                       style={{ opacity: lockedOpacity }}
                     />
                   )}
@@ -590,11 +590,11 @@ function App() {
 
           <div className="flex justify-between text-sm">
             <span className="text-gray-600">
-              Available: <span className="font-semibold text-purple-600">{formatCharges(availableCharges)}</span>
+              Available: <span className="font-semibold text-yellow-700">{formatCharges(availableCharges)}</span>
             </span>
             {lockedCharges > 0 && (
               <span className="text-gray-600">
-                <span className="font-semibold text-gray-800">{lockedCharges}</span> locked in bank
+                <span className="font-semibold text-orange-700">{lockedCharges}</span> locked in bank
               </span>
             )}
             <span className="text-gray-600">
