@@ -1,11 +1,12 @@
 import { useState } from 'react';
-import type { Roll, BonusModifier, PendingRoll, TropeFilters } from './types';
+import type { Roll, BonusModifier, ChallengeModifier, PendingRoll, TropeFilters } from './types';
 import { TROPE_DESCRIPTIONS } from './data/tropes';
 import {
   rollDie,
   getRandomTrope,
   generateId,
   generateBonusModifier,
+  generateChallengeModifier,
   formatEffectDescription,
   formatCharges,
   handleReroll
@@ -20,6 +21,7 @@ function App() {
   const [rolls, setRolls] = useState<Roll[]>([]);
   const [bankedRolls, setBankedRolls] = useState<Roll[]>([]);
   const [bonusModifier, setBonusModifier] = useState<BonusModifier | null>(null);
+  const [challengeModifier, setChallengeModifier] = useState<ChallengeModifier | null>(null);
   const [pendingRoll, setPendingRoll] = useState<PendingRoll | null>(null);
   const [filters, setFilters] = useState<TropeFilters>({
     target: 'Self',
@@ -56,7 +58,7 @@ function App() {
     let die2Original: number | undefined;
     let rerolledFrom20 = false;
 
-    // Check for Natural 20s
+    // Check for Natural 20s - generate bonus but keep die value at 20
     if (die1 === 20 || die2 === 20) {
       // Generate bonus modifier
       const newBonus = generateBonusModifier(0);
@@ -73,17 +75,7 @@ function App() {
       }
 
       setBonusModifier(newBonus);
-      alert(`🎉 Natural 20! Bonus Modifier Earned: ${newBonus.name}\n\n${newBonus.description}\n\nThe 20 has been rerolled to 19 for this trope.`);
-
-      // Reroll 20s to 19
-      if (die1 === 20) {
-        die1Original = 20;
-        die1 = 19;
-      }
-      if (die2 === 20) {
-        die2Original = 20;
-        die2 = 19;
-      }
+      alert(`🎉 Natural 20! Bonus Modifier Earned: ${newBonus.name}\n\n${newBonus.description}\n\nThe 20 remains as true permanent!`);
       rerolledFrom20 = true;
     }
 
@@ -153,16 +145,38 @@ function App() {
     let die2Original = pendingRoll.die2Original;
     let rerolledFrom1 = false;
 
-    // Handle Natural 1 rerolls
-    if (die1 === 1) {
-      die1Original = 1;
-      die1 = handleReroll(rollDie());
-      rerolledFrom1 = true;
-    }
-    if (die2 === 1) {
-      die2Original = 1;
-      die2 = handleReroll(rollDie());
-      rerolledFrom1 = true;
+    // Handle Natural 1 rerolls and generate challenge
+    if (die1 === 1 || die2 === 1) {
+      // Generate challenge modifier
+      const newChallenge = generateChallengeModifier(0);
+
+      // Warn if challenge already exists
+      if (challengeModifier) {
+        const confirmed = window.confirm(
+          `You already have a challenge modifier (${challengeModifier.name})! Rolling this Natural 1 will overwrite it. Continue?`
+        );
+        if (!confirmed) {
+          // Still apply the trope but don't generate new challenge
+        } else {
+          setChallengeModifier(newChallenge);
+          alert(`⚠️ Natural 1! Challenge Received: ${newChallenge.name}\n\n${newChallenge.description}`);
+        }
+      } else {
+        setChallengeModifier(newChallenge);
+        alert(`⚠️ Natural 1! Challenge Received: ${newChallenge.name}\n\n${newChallenge.description}`);
+      }
+
+      // Reroll the 1s blind
+      if (die1 === 1) {
+        die1Original = 1;
+        die1 = handleReroll(rollDie());
+        rerolledFrom1 = true;
+      }
+      if (die2 === 1) {
+        die2Original = 1;
+        die2 = handleReroll(rollDie());
+        rerolledFrom1 = true;
+      }
     }
 
     const intensity = assignment === 'die1ToIntensity' ? die1 : die2;
@@ -244,21 +258,97 @@ function App() {
         let message = '';
 
         switch (bonusModifier.type) {
+          case 'plus5':
+            // Add +5 to selected stat (max 20)
+            if (applyTo === 'intensity') {
+              updatedRoll.intensity = Math.min(20, roll.intensity + 5);
+              message = `Intensity increased by 5 to ${updatedRoll.intensity}.`;
+            } else {
+              updatedRoll.longevity = Math.min(20, roll.longevity + 5);
+              message = `Longevity increased by 5 to ${updatedRoll.longevity}.`;
+            }
+            break;
+
           case 'permanent':
             // Set longevity to 20 (true permanent)
             updatedRoll.longevity = 20;
-            message = 'Trope is now permanent! Longevity set to 20.';
+            message = 'Trope is now permanent! Longevity set to 20 (never expires).';
             break;
 
-          case 'plus3':
-            // Add +3 to selected stat (max 19)
-            if (applyTo === 'intensity') {
-              updatedRoll.intensity = Math.min(19, roll.intensity + 3);
-              message = `Intensity increased by 3 to ${updatedRoll.intensity}.`;
+          case 'retarget':
+            // Change the target of the trope
+            const newTarget = prompt('Enter new target name:', roll.appliedTo);
+            if (newTarget && newTarget.trim()) {
+              updatedRoll.appliedTo = newTarget.trim();
+              message = `Target changed to: ${newTarget.trim()}.`;
             } else {
-              updatedRoll.longevity = Math.min(20, roll.longevity + 3);
-              message = `Longevity increased by 3 to ${updatedRoll.longevity}.`;
+              return roll; // No change if cancelled
             }
+            break;
+
+          case 'plus3charge':
+            // This is auto-applied when generated
+            message = '+3 charges already applied when bonus was earned.';
+            break;
+
+          case 'refresh':
+            // Reset longevity to original die value
+            const originalLongevity = roll.intensity === roll.die1 ? roll.die2 : roll.die1;
+            updatedRoll.longevity = originalLongevity;
+            updatedRoll.expired = false; // Can refresh expired tropes
+            message = `Duration refreshed! Longevity reset to ${updatedRoll.longevity}.`;
+            break;
+
+          case 'swap':
+            // Swap intensity and longevity
+            updatedRoll.intensity = roll.longevity;
+            updatedRoll.longevity = roll.intensity;
+            message = `Intensity and Longevity swapped! Now Int: ${updatedRoll.intensity}, Long: ${updatedRoll.longevity}.`;
+            break;
+
+          case 'allatonce':
+            // Set intensity to 20 and longevity to 2
+            updatedRoll.intensity = 20;
+            updatedRoll.longevity = 2;
+            message = 'All at Once applied! Intensity: 20, Longevity: 2 (maximum power, minimum duration).';
+            break;
+
+          default:
+            message = 'Unknown bonus type.';
+        }
+
+        alert(`Bonus modifier applied! ${message}`);
+        return updatedRoll;
+      }
+      return roll;
+    }));
+
+    // Clear the bonus modifier after use
+    setBonusModifier(null);
+  };
+
+  // Apply challenge modifier to a trope (or apply automatic effects)
+  const applyChallengeModifier = (rollId: number, applyTo: 'intensity' | 'longevity' | 'auto') => {
+    if (!challengeModifier) return;
+
+    // Handle auto-apply challenges
+    if (challengeModifier.type === 'minus2charge') {
+      setCurrentCharges(prev => Math.max(0, prev - 2));
+      alert(`Challenge applied! Lost 2 energy charges.`);
+      setChallengeModifier(null);
+      return;
+    }
+
+    setRolls(prev => prev.map(roll => {
+      if (roll.id === rollId) {
+        let updatedRoll = { ...roll };
+        let message = '';
+
+        switch (challengeModifier.type) {
+          case 'expire':
+            // Mark the trope as expired
+            updatedRoll.expired = true;
+            message = 'Trope has been expired.';
             break;
 
           case 'minus5':
@@ -272,84 +362,39 @@ function App() {
             }
             break;
 
-          case 'reroll':
-            // Reroll the selected die (intensity or longevity)
-            const newRoll = rollDie();
-            if (applyTo === 'intensity') {
-              // Figure out which original die was used for intensity
-              const wasUsingDie1 = roll.intensity === roll.die1;
-              if (wasUsingDie1) {
-                updatedRoll.die1 = newRoll;
-                updatedRoll.intensity = newRoll;
-              } else {
-                updatedRoll.die2 = newRoll;
-                updatedRoll.intensity = newRoll;
-              }
-              message = `Intensity die rerolled! New value: ${newRoll}.`;
-            } else {
-              // Figure out which original die was used for longevity
-              const wasUsingDie1 = roll.longevity === roll.die1;
-              if (wasUsingDie1) {
-                updatedRoll.die1 = newRoll;
-                updatedRoll.longevity = newRoll;
-              } else {
-                updatedRoll.die2 = newRoll;
-                updatedRoll.longevity = newRoll;
-              }
-              message = `Longevity die rerolled! New value: ${newRoll}.`;
-            }
+          case 'subvert':
+            // This would require looking up the subversion from trope data
+            message = 'Subversion feature not yet implemented.';
             break;
 
-          case 'swap':
-            // Swap intensity and longevity
-            updatedRoll.intensity = roll.longevity;
-            updatedRoll.longevity = roll.intensity;
-            message = `Intensity and Longevity swapped! Now Int: ${updatedRoll.intensity}, Long: ${updatedRoll.longevity}.`;
-            break;
-
-          case 'refresh':
-            // Reset longevity to original die value
-            const originalLongevity = roll.intensity === roll.die1 ? roll.die2 : roll.die1;
-            updatedRoll.longevity = originalLongevity;
-            message = `Duration refreshed! Longevity reset to ${updatedRoll.longevity}.`;
-            break;
-
-          case 'expire':
-            // Mark the trope as expired
-            updatedRoll.expired = true;
-            message = 'Trope has been marked as expired.';
-            break;
-
-          case 'retarget':
-            // This needs special UI to change the target - for now just show a message
-            const newTarget = prompt('Enter new target name:', roll.appliedTo);
+          case 'rebound':
+            // Reassign to a different target
+            const newTarget = prompt('Enter new target for rebound:', roll.appliedTo);
             if (newTarget && newTarget.trim()) {
               updatedRoll.appliedTo = newTarget.trim();
-              message = `Target changed to: ${newTarget.trim()}.`;
+              message = `Trope rebounded to: ${newTarget.trim()}.`;
             } else {
               return roll; // No change if cancelled
             }
             break;
 
+          case 'balance':
+            // Duplicate on enemy - this would require creating a new roll
+            message = 'Balance in Everything: You need to manually create a duplicate on an enemy.';
+            break;
+
           default:
-            // Generic +1 for unknown types
-            if (applyTo === 'intensity') {
-              updatedRoll.intensity = Math.min(20, roll.intensity + 1);
-              message = `Intensity increased by 1 to ${updatedRoll.intensity}.`;
-            } else {
-              updatedRoll.longevity = Math.min(20, roll.longevity + 1);
-              message = `Longevity increased by 1 to ${updatedRoll.longevity}.`;
-            }
+            message = 'Unknown challenge type.';
         }
 
-        alert(`Bonus modifier applied! ${message}`);
+        alert(`Challenge applied! ${message}`);
         return updatedRoll;
       }
       return roll;
     }));
 
-    // Clear the bonus modifier after use
-    setBonusModifier(null);
+    // Clear the challenge modifier after use
+    setChallengeModifier(null);
   };
 
   // Save game
@@ -362,6 +407,7 @@ function App() {
       rolls,
       bankedRolls,
       bonusModifier,
+      challengeModifier,
       filters
     };
     if (saveGameState(username, gameState)) {
@@ -379,6 +425,7 @@ function App() {
       setRolls(loadedState.rolls);
       setBankedRolls(loadedState.bankedRolls);
       setBonusModifier(loadedState.bonusModifier);
+      setChallengeModifier(loadedState.challengeModifier || null);
       setFilters(loadedState.filters);
       alert(`Game loaded! Last saved: ${new Date(loadedState.lastSaved).toLocaleString()}`);
     } else {
@@ -619,6 +666,15 @@ function App() {
           />
         )}
 
+        {/* Challenge Modifier Display */}
+        {challengeModifier && (
+          <ChallengeModifierComponent
+            challengeModifier={challengeModifier}
+            activeRolls={activeRolls}
+            onApplyChallenge={applyChallengeModifier}
+          />
+        )}
+
         {/* Banked Tropes */}
         {bankedRolls.length > 0 && (
           <div className="bg-gradient-to-br from-amber-50 to-orange-50 rounded-xl shadow-lg p-3 border-2 border-amber-400">
@@ -734,8 +790,8 @@ function BonusModifierComponent({ bonusModifier, activeRolls, onApplyBonus }: an
   const [applyTo, setApplyTo] = useState<'intensity' | 'longevity'>('intensity');
 
   // Determine if this bonus requires choosing a stat
-  const requiresChoice = ['plus3', 'minus5', 'reroll'].includes(bonusModifier.type);
-  const isAutomatic = ['permanent', 'swap', 'refresh', 'expire', 'retarget'].includes(bonusModifier.type);
+  const requiresChoice = ['plus5'].includes(bonusModifier.type);
+  const isAutomatic = ['permanent', 'swap', 'refresh', 'retarget', 'plus3charge', 'allatonce'].includes(bonusModifier.type);
 
   const handleApply = () => {
     if (selectedTropeId === null) {
@@ -748,10 +804,8 @@ function BonusModifierComponent({ bonusModifier, activeRolls, onApplyBonus }: an
   // Get descriptive text for the bonus effect
   const getEffectLabel = (stat: 'intensity' | 'longevity') => {
     switch (bonusModifier.type) {
-      case 'plus3': return `${stat === 'intensity' ? 'Intensity' : 'Longevity'} (+3)`;
-      case 'minus5': return `${stat === 'intensity' ? 'Intensity' : 'Longevity'} (-5)`;
-      case 'reroll': return `Reroll ${stat === 'intensity' ? 'Intensity' : 'Longevity'} Die`;
-      default: return `${stat === 'intensity' ? 'Intensity' : 'Longevity'} (+1)`;
+      case 'plus5': return `${stat === 'intensity' ? 'Intensity' : 'Longevity'} (+5)`;
+      default: return `${stat === 'intensity' ? 'Intensity' : 'Longevity'}`;
     }
   };
 
@@ -838,6 +892,127 @@ function BonusModifierComponent({ bonusModifier, activeRolls, onApplyBonus }: an
   );
 }
 
+// Challenge Modifier Component
+function ChallengeModifierComponent({ challengeModifier, activeRolls, onApplyChallenge }: any) {
+  const [selectedTropeId, setSelectedTropeId] = useState<number | null>(null);
+  const [applyTo, setApplyTo] = useState<'intensity' | 'longevity'>('intensity');
+
+  // Determine if this challenge requires choosing a stat
+  const requiresChoice = ['minus5'].includes(challengeModifier.type);
+  const isAutomatic = ['expire', 'rebound', 'balance', 'subvert', 'minus2charge'].includes(challengeModifier.type);
+
+  const handleApply = () => {
+    // Auto-apply challenges don't need a trope selection
+    if (challengeModifier.type === 'minus2charge') {
+      onApplyChallenge(null, 'auto');
+      return;
+    }
+
+    if (selectedTropeId === null) {
+      alert('Please select a trope to apply the challenge modifier to.');
+      return;
+    }
+    onApplyChallenge(selectedTropeId, isAutomatic ? 'auto' : applyTo);
+  };
+
+  // Get descriptive text for the challenge effect
+  const getEffectLabel = (stat: 'intensity' | 'longevity') => {
+    switch (challengeModifier.type) {
+      case 'minus5': return `${stat === 'intensity' ? 'Intensity' : 'Longevity'} (-5)`;
+      default: return `${stat === 'intensity' ? 'Intensity' : 'Longevity'}`;
+    }
+  };
+
+  return (
+    <div className="bg-gradient-to-br from-red-50 to-orange-50 rounded-xl shadow-lg p-3 border-2 border-red-400">
+      <div className="flex items-center gap-2 mb-2">
+        <span className="text-2xl">⚠️</span>
+        <h3 className="text-lg font-bold bg-gradient-to-r from-red-600 to-orange-600 bg-clip-text text-transparent">
+          Challenge Modifier Active
+        </h3>
+      </div>
+      <div className="bg-white p-3 rounded-lg border border-red-300 shadow-sm">
+        <p className="font-bold text-base text-gray-800 mb-1">{challengeModifier.name}</p>
+        <p className="text-xs text-gray-700 mb-3">{challengeModifier.description}</p>
+
+        {challengeModifier.type === 'minus2charge' ? (
+          <button
+            onClick={handleApply}
+            className="w-full px-4 py-2 bg-gradient-to-r from-red-600 to-orange-600 text-white font-bold text-sm rounded-lg hover:from-red-700 hover:to-orange-700 shadow-md hover:shadow-lg transition-all"
+          >
+            ⚡ Apply Challenge (Auto)
+          </button>
+        ) : activeRolls.length > 0 ? (
+          <>
+            <div className="mb-2">
+              <label className="block text-xs font-bold text-gray-700 mb-1">Select Trope:</label>
+              <select
+                value={selectedTropeId || ''}
+                onChange={(e) => setSelectedTropeId(Number(e.target.value))}
+                className="w-full p-2 border border-gray-300 text-xs rounded-lg focus:border-red-500 focus:ring-1 focus:ring-red-200"
+              >
+                <option value="">-- Choose a trope --</option>
+                {activeRolls.map((roll: any) => (
+                  <option key={roll.id} value={roll.id}>
+                    {roll.trope} (Int: {roll.intensity}, Long: {roll.longevity})
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {requiresChoice && (
+              <div className="mb-3">
+                <label className="block text-xs font-bold text-gray-700 mb-1">Apply to:</label>
+                <div className="flex gap-3">
+                  <label className="flex items-center gap-1 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="applyTo"
+                      value="intensity"
+                      checked={applyTo === 'intensity'}
+                      onChange={(e) => setApplyTo(e.target.value as 'intensity' | 'longevity')}
+                      className="w-4 h-4 text-red-600"
+                    />
+                    <span className="text-xs font-medium text-gray-700">{getEffectLabel('intensity')}</span>
+                  </label>
+                  <label className="flex items-center gap-1 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="applyTo"
+                      value="longevity"
+                      checked={applyTo === 'longevity'}
+                      onChange={(e) => setApplyTo(e.target.value as 'intensity' | 'longevity')}
+                      className="w-4 h-4 text-red-600"
+                    />
+                    <span className="text-xs font-medium text-gray-700">{getEffectLabel('longevity')}</span>
+                  </label>
+                </div>
+              </div>
+            )}
+
+            {isAutomatic && (
+              <div className="mb-3 bg-red-100 border border-red-400 rounded-lg p-2">
+                <p className="text-xs font-semibold text-red-800">
+                  ⚠️ This challenge will be applied automatically to the selected trope.
+                </p>
+              </div>
+            )}
+
+            <button
+              onClick={handleApply}
+              className="w-full px-4 py-2 bg-gradient-to-r from-red-600 to-orange-600 text-white font-bold text-sm rounded-lg hover:from-red-700 hover:to-orange-700 shadow-md hover:shadow-lg transition-all"
+            >
+              ⚡ Apply Challenge Modifier
+            </button>
+          </>
+        ) : (
+          <p className="text-xs text-gray-500 italic">No active tropes to apply challenge to. Pull a trope first!</p>
+        )}
+      </div>
+    </div>
+  );
+}
+
 // Pending Roll Component
 function PendingRollComponent({ pendingRoll, onFail, onBank, onApply, formatEffectDescription }: any) {
   const [assignment, setAssignment] = useState<'die1ToIntensity' | 'die2ToIntensity'>('die1ToIntensity');
@@ -848,13 +1023,13 @@ function PendingRollComponent({ pendingRoll, onFail, onBank, onApply, formatEffe
 
   return (
     <div className="bg-gradient-to-br from-purple-50 to-indigo-50 rounded-xl shadow-xl p-4 border-2 border-purple-400">
-      {(pendingRoll.die1Original === 20 || pendingRoll.die2Original === 20) && (
+      {pendingRoll.rerolledFrom20 && (
         <div className="bg-gradient-to-r from-yellow-100 to-amber-100 border-2 border-yellow-400 rounded-lg p-3 mb-3 shadow-md">
           <div className="flex items-start space-x-2">
             <span className="text-2xl">🎉</span>
             <div>
               <p className="font-bold text-base text-yellow-800">Natural 20! Bonus Modifier Earned</p>
-              <p className="text-xs text-gray-700">The 20 has been rerolled to 19 for this trope</p>
+              <p className="text-xs text-gray-700">The 20 remains as true permanent</p>
             </div>
           </div>
         </div>
@@ -868,21 +1043,9 @@ function PendingRollComponent({ pendingRoll, onFail, onBank, onApply, formatEffe
       <div className="bg-white rounded-lg p-2 mb-3 border border-purple-300 shadow-sm">
         <p className="font-semibold text-sm text-gray-800">
           <span className="text-purple-600">Rolled: </span>
-          {pendingRoll.die1Original === 20 ? (
-            <><del className="text-gray-400">20</del> <span className="text-purple-600">→ 19</span></>
-          ) : pendingRoll.die1Original === 1 ? (
-            <><del className="text-gray-400">1</del> <span className="text-purple-600">→ {pendingRoll.die1}</span></>
-          ) : (
-            <span className="text-purple-600">{pendingRoll.die1}</span>
-          )}
+          <span className="text-purple-600">{pendingRoll.die1}</span>
           {' & '}
-          {pendingRoll.die2Original === 20 ? (
-            <><del className="text-gray-400">20</del> <span className="text-purple-600">→ 19</span></>
-          ) : pendingRoll.die2Original === 1 ? (
-            <><del className="text-gray-400">1</del> <span className="text-purple-600">→ {pendingRoll.die2}</span></>
-          ) : (
-            <span className="text-purple-600">{pendingRoll.die2}</span>
-          )}
+          <span className="text-purple-600">{pendingRoll.die2}</span>
         </p>
       </div>
 

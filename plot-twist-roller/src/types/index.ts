@@ -18,19 +18,33 @@ export interface Roll {
 }
 
 export type BonusModifierType =
-  | 'plus3'        // +3 to dice value (max 19)
-  | 'minus5'       // -5 to dice value (min 2)
-  | 'reroll'       // Reroll dice
-  | 'expire'       // Expire trope
-  | 'swap'         // Swap dice values
-  | 'permanent'    // Make permanent (set Longevity to 18 - degrading permanent)
+  | 'plus5'        // +5 to dice value (max 20)
+  | 'permanent'    // Make permanent (set Longevity to 20 - true permanent)
   | 'retarget'     // Change target
   | 'plus3charge'  // +3 charges (auto-applies immediately)
-  | 'refresh';     // Refresh duration
+  | 'refresh'      // Refresh duration
+  | 'swap'         // Swap dice values between two tropes
+  | 'allatonce';   // Set intensity to 20 and longevity to 2
+
+export type ChallengeModifierType =
+  | 'expire'       // Expire active trope
+  | 'minus5'       // -5 to dice value (min 2)
+  | 'subvert'      // Subvert selected trope
+  | 'rebound'      // Trope assigned to different present target
+  | 'balance'      // Self-targeted trope duplicated on enemy
+  | 'minus2charge'; // -2 energy charges
 
 export interface BonusModifier {
   id: number;
   type: BonusModifierType;
+  name: string;
+  description: string;
+  dayEarned: number;
+}
+
+export interface ChallengeModifier {
+  id: number;
+  type: ChallengeModifierType;
   name: string;
   description: string;
   dayEarned: number;
@@ -51,6 +65,7 @@ export interface GameState {
   rolls: Roll[];
   bankedRolls: Roll[];
   bonusModifier: BonusModifier | null;
+  challengeModifier: ChallengeModifier | null;
   filters: TropeFilters;
 }
 
