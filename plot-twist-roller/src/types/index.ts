@@ -1,7 +1,6 @@
 export interface Roll {
   id: number;
   trope: string;
-  category: string;
   die1: number;          // Current value (after rerolls if any)
   die2: number;          // Current value (after rerolls if any)
   die1Original?: number; // Original roll if rerolled from 20 or 1
@@ -37,6 +36,13 @@ export interface BonusModifier {
   dayEarned: number;
 }
 
+export interface TropeFilters {
+  target: string;        // Self, Companion, Ally, Enemy, Animal, Object, Area
+  situation: string;     // Physical Conflict, Social Conflict, At Rest
+  fanserviceEnabled: boolean;
+  gender?: string;       // masculine, feminine (only used if fanservice enabled)
+}
+
 export interface GameState {
   username: string;
   lastSaved: string;
@@ -45,13 +51,12 @@ export interface GameState {
   rolls: Roll[];
   bankedRolls: Roll[];
   bonusModifier: BonusModifier | null;
-  activeCategories: { [key: string]: boolean };
+  filters: TropeFilters;
 }
 
 export interface PendingRoll {
   id: number;
   trope: string;
-  category: string;
   description: string;
   die1: number;          // Final value for assignment
   die2: number;          // Final value for assignment

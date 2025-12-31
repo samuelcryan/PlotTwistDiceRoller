@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import type { Roll, BonusModifier, PendingRoll } from './types';
+import type { Roll, BonusModifier, PendingRoll, TropeFilters } from './types';
 import { TROPE_DESCRIPTIONS } from './data/tropes';
 import {
   rollDie,
@@ -21,14 +21,11 @@ function App() {
   const [bankedRolls, setBankedRolls] = useState<Roll[]>([]);
   const [bonusModifier, setBonusModifier] = useState<BonusModifier | null>(null);
   const [pendingRoll, setPendingRoll] = useState<PendingRoll | null>(null);
-  const [activeCategories, setActiveCategories] = useState<{ [key: string]: boolean }>({
-    "Extreme Combat": true,
-    "Combat": true,
-    "Social": true,
-    "Isolated": true,
-    "Companion": true,
-    "Fanservice": true,
-    "Wildcard": true
+  const [filters, setFilters] = useState<TropeFilters>({
+    target: 'Self',
+    situation: 'Physical Conflict',
+    fanserviceEnabled: false,
+    gender: undefined
   });
   const [activeTab, setActiveTab] = useState<'active' | 'expired'>('active');
   const [username] = useState('Player');
@@ -92,14 +89,14 @@ function App() {
 
     // Get random trope
     try {
-      const { trope, category } = getRandomTrope(activeCategories);
-      const description = TROPE_DESCRIPTIONS[trope] || 'No description available.';
+      const tropeData = getRandomTrope(filters);
+      const trope = tropeData.name;
+      const description = tropeData.description || TROPE_DESCRIPTIONS[trope] || 'No description available.';
 
       // Create pending roll
       const pending: PendingRoll = {
         id: generateId(),
         trope,
-        category,
         description,
         die1,
         die2,
@@ -189,29 +186,6 @@ function App() {
     setPendingRoll(null);
   };
 
-  // Toggle category
-  const toggleCategory = (category: string) => {
-    setActiveCategories(prev => ({ ...prev, [category]: !prev[category] }));
-  };
-
-  // Enable all categories
-  const enableAllCategories = () => {
-    const allEnabled: { [key: string]: boolean } = {};
-    Object.keys(activeCategories).forEach(cat => {
-      allEnabled[cat] = true;
-    });
-    setActiveCategories(allEnabled);
-  };
-
-  // Disable all categories
-  const disableAllCategories = () => {
-    const allDisabled: { [key: string]: boolean } = {};
-    Object.keys(activeCategories).forEach(cat => {
-      allDisabled[cat] = false;
-    });
-    setActiveCategories(allDisabled);
-  };
-
   // Toggle expired status
   const toggleExpired = (rollId: number) => {
     setRolls(prev => prev.map(roll =>
@@ -247,7 +221,6 @@ function App() {
     const pending: PendingRoll = {
       id: roll.id,
       trope: roll.trope,
-      category: roll.category,
       description: TROPE_DESCRIPTIONS[roll.trope] || 'No description available.',
       die1: roll.die1,
       die2: roll.die2,
@@ -389,7 +362,7 @@ function App() {
       rolls,
       bankedRolls,
       bonusModifier,
-      activeCategories
+      filters
     };
     if (saveGameState(username, gameState)) {
       alert('Game saved successfully!');
@@ -406,7 +379,7 @@ function App() {
       setRolls(loadedState.rolls);
       setBankedRolls(loadedState.bankedRolls);
       setBonusModifier(loadedState.bonusModifier);
-      setActiveCategories(loadedState.activeCategories);
+      setFilters(loadedState.filters);
       alert(`Game loaded! Last saved: ${new Date(loadedState.lastSaved).toLocaleString()}`);
     } else {
       alert('No saved game found for this username.');
@@ -560,37 +533,80 @@ function App() {
           </div>
         </div>
 
-        {/* Category Selector */}
+        {/* Filter Controls */}
         <div className="bg-white rounded-xl shadow-lg p-4 border border-purple-200">
-          <div className="flex justify-between items-center mb-4">
-            <h3 className="text-xl font-bold text-gray-800">Trope Categories</h3>
-            <div className="flex gap-2">
-              <button
-                onClick={enableAllCategories}
-                className="px-3 py-1 bg-green-500 text-white text-sm rounded-lg hover:bg-green-600 font-medium shadow-md transition-all"
+          <h3 className="text-xl font-bold text-gray-800 mb-4">Trope Filters</h3>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Target dropdown */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Target
+              </label>
+              <select
+                value={filters.target}
+                onChange={(e) => setFilters(prev => ({ ...prev, target: e.target.value }))}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-purple-500 focus:border-purple-500"
               >
-                ✓ All
-              </button>
-              <button
-                onClick={disableAllCategories}
-                className="px-3 py-1 bg-red-500 text-white text-sm rounded-lg hover:bg-red-600 font-medium shadow-md transition-all"
-              >
-                ✗ None
-              </button>
+                <option value="Self">Self</option>
+                <option value="Companion">Companion</option>
+                <option value="Ally">Ally</option>
+                <option value="Enemy">Enemy</option>
+                <option value="Animal">Animal</option>
+                <option value="Object">Object</option>
+                <option value="Area">Area</option>
+              </select>
             </div>
-          </div>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-            {Object.keys(activeCategories).map(category => (
-              <label key={category} className="flex items-center space-x-2 cursor-pointer p-2 rounded-lg hover:bg-purple-50 transition-colors">
+
+            {/* Situation dropdown */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Situation
+              </label>
+              <select
+                value={filters.situation}
+                onChange={(e) => setFilters(prev => ({ ...prev, situation: e.target.value }))}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-purple-500 focus:border-purple-500"
+              >
+                <option value="Physical Conflict">Physical Conflict</option>
+                <option value="Social Conflict">Social Conflict</option>
+                <option value="At Rest">At Rest</option>
+              </select>
+            </div>
+
+            {/* Fanservice checkbox */}
+            <div className="col-span-1 md:col-span-2">
+              <label className="flex items-center space-x-2 cursor-pointer">
                 <input
                   type="checkbox"
-                  checked={activeCategories[category]}
-                  onChange={() => toggleCategory(category)}
+                  checked={filters.fanserviceEnabled}
+                  onChange={(e) => setFilters(prev => ({
+                    ...prev,
+                    fanserviceEnabled: e.target.checked,
+                    gender: e.target.checked ? 'masculine' : undefined
+                  }))}
                   className="w-5 h-5 text-purple-600 rounded focus:ring-purple-500"
                 />
-                <span className="text-sm font-medium text-gray-700">{category}</span>
+                <span className="text-sm font-medium text-gray-700">Enable Fanservice</span>
               </label>
-            ))}
+            </div>
+
+            {/* Gender dropdown (conditional) */}
+            {filters.fanserviceEnabled && (
+              <div className="col-span-1 md:col-span-2">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Gender
+                </label>
+                <select
+                  value={filters.gender || 'masculine'}
+                  onChange={(e) => setFilters(prev => ({ ...prev, gender: e.target.value }))}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-purple-500 focus:border-purple-500"
+                >
+                  <option value="masculine">Masculine</option>
+                  <option value="feminine">Feminine</option>
+                </select>
+              </div>
+            )}
           </div>
         </div>
 
@@ -619,9 +635,6 @@ function App() {
                     <div className="flex-1">
                       <h4 className="font-bold text-base text-gray-800 mb-1">{roll.trope}</h4>
                       <div className="flex items-center gap-1 mb-1 flex-wrap">
-                        <span className="px-2 py-0.5 bg-amber-100 text-amber-800 rounded-full text-xs font-semibold">
-                          {roll.category}
-                        </span>
                         <span className="px-2 py-0.5 bg-orange-100 text-orange-700 rounded-full text-xs">
                           Int: {roll.intensity} | Long: {roll.longevity}
                         </span>
@@ -848,10 +861,7 @@ function PendingRollComponent({ pendingRoll, onFail, onBank, onApply, formatEffe
       )}
 
       <div className="mb-3">
-        <h2 className="text-2xl font-bold text-gray-800 mb-2">{pendingRoll.trope}</h2>
-        <span className="inline-block px-3 py-1 bg-gradient-to-r from-purple-500 to-indigo-500 text-white rounded-full text-xs font-bold shadow-md">
-          {pendingRoll.category}
-        </span>
+        <h2 className="text-2xl font-bold text-gray-800">{pendingRoll.trope}</h2>
       </div>
       <p className="text-gray-700 italic text-sm mb-3 leading-relaxed">{pendingRoll.description}</p>
 
@@ -985,9 +995,6 @@ function TropeCard({ roll, onToggleExpired, onDelete, onCollectRefund, formatEff
     }`}>
       <div className="flex justify-between items-start mb-2">
         <div className="flex flex-wrap gap-1">
-          <span className="px-2 py-0.5 bg-gradient-to-r from-purple-500 to-indigo-500 text-white rounded-full text-xs font-bold shadow-sm">
-            {roll.category}
-          </span>
           <span className="px-2 py-0.5 bg-gradient-to-r from-blue-500 to-cyan-500 text-white rounded-full text-xs font-medium shadow-sm">
             {roll.appliedTo}
           </span>
