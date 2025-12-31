@@ -1,5 +1,7 @@
-import { TROPES } from '../data/tropes';
+import { ALL_TROPES } from '../data/tropes';
 import { INTENSITY_SCALE, LONGEVITY_SCALE } from '../data/scales';
+import type { TropeData } from '../data/tropes';
+import type { TropeFilters } from '../types';
 
 /**
  * Roll a single d20
@@ -66,33 +68,60 @@ export const formatEffectDescription = (intensity: number, longevity: number): s
 };
 
 /**
- * Get random trope from active categories
+ * Get random trope based on filter criteria
  */
-export const getRandomTrope = (activeCategories: { [key: string]: boolean }): { trope: string; category: string } => {
-  // Get all active category names
-  const activeCategoryNames = Object.keys(activeCategories).filter(cat => activeCategories[cat]);
-
-  if (activeCategoryNames.length === 0) {
-    throw new Error('No active categories! Please enable at least one category.');
-  }
-
-  // Pick random category
-  const randomCategory = activeCategoryNames[Math.floor(Math.random() * activeCategoryNames.length)];
-
-  // Get tropes from that category
-  const tropesInCategory = TROPES[randomCategory];
-
-  if (!tropesInCategory || tropesInCategory.length === 0) {
-    throw new Error(`No tropes found in category: ${randomCategory}`);
-  }
-
-  // Pick random trope
-  const randomTrope = tropesInCategory[Math.floor(Math.random() * tropesInCategory.length)];
-
-  return {
-    trope: randomTrope,
-    category: randomCategory
+export const getRandomTrope = (filters: TropeFilters): TropeData => {
+  // Map UI values to data values
+  const contextMap: { [key: string]: string } = {
+    'Physical Conflict': 'Combat',
+    'Social Conflict': 'Social',
+    'At Rest': 'At Rest'
   };
+
+  const targetMap: { [key: string]: string[] } = {
+    'Self': ['Self', 'Human'],
+    'Companion': ['Companion'],
+    'Ally': ['Ally', 'Human'],
+    'Enemy': ['Enemy', 'Human'],
+    'Animal': ['Creature'],
+    'Object': ['Object'],
+    'Area': ['Area']
+  };
+
+  const mappedContext = contextMap[filters.situation] || filters.situation;
+  const mappedTargets = targetMap[filters.target] || [filters.target];
+
+  // Filter tropes based on criteria
+  const matchingTropes = ALL_TROPES.filter(trope => {
+    // Check if target matches
+    const targetMatches = trope.targets.some(t => mappedTargets.includes(t));
+    if (!targetMatches) return false;
+
+    // Check if context matches (trope can have multiple contexts)
+    const contextMatches = trope.contexts.includes(mappedContext);
+    if (!contextMatches) return false;
+
+    // Check gender filter (only if fanservice enabled)
+    if (filters.fanserviceEnabled && filters.gender) {
+      // If gender filter is specified, trope must either be 'any' or match the gender
+      const genderMatches = trope.gender === 'any' || trope.gender === filters.gender;
+      if (!genderMatches) return false;
+    } else if (!filters.fanserviceEnabled) {
+      // If fanservice disabled, exclude gender-specific tropes
+      if (trope.gender !== 'any') return false;
+    }
+
+    return true;
+  });
+
+  if (matchingTropes.length === 0) {
+    throw new Error(`No tropes match the selected filters: Target=${filters.target}, Situation=${filters.situation}, Fanservice=${filters.fanserviceEnabled}, Gender=${filters.gender || 'N/A'}`);
+  }
+
+  // Pick random trope from matching ones
+  const randomTrope = matchingTropes[Math.floor(Math.random() * matchingTropes.length)];
+
+  return randomTrope;
 };
 
 /**
