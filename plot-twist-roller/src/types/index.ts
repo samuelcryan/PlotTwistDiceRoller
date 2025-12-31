@@ -15,6 +15,7 @@ export interface Roll {
   rerolledFrom1?: boolean;
   rerolledFrom20?: boolean;
   bonusApplied?: boolean; // True if a bonus modifier has been applied to this trope
+  challengeApplied?: boolean; // True if a challenge modifier has been applied to this trope
 }
 
 export type BonusModifierType =
@@ -55,7 +56,6 @@ export interface TropeFilters {
   situation: string;     // Physical Conflict, Social Conflict, At Rest
   fanserviceEnabled: boolean;
   gender?: string;       // masculine, feminine (only used if fanservice enabled)
-  targetName?: string;   // Name of the target (disabled when Self is selected)
 }
 
 export interface GameState {

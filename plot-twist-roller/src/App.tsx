@@ -27,8 +27,7 @@ function App() {
     target: 'Self',
     situation: 'Physical Conflict',
     fanserviceEnabled: false,
-    gender: undefined,
-    targetName: undefined
+    gender: undefined
   });
   const [activeTab, setActiveTab] = useState<'active' | 'expired'>('active');
   const [username] = useState('Player');
@@ -203,8 +202,17 @@ function App() {
 
   // Toggle expired status
   const toggleExpired = (rollId: number) => {
-    setRolls(prev => prev.map(roll =>
-      roll.id === rollId ? { ...roll, expired: !roll.expired } : roll
+    const roll = rolls.find(r => r.id === rollId);
+    if (!roll) return;
+
+    // If marking as expired, auto-refund charges
+    if (!roll.expired) {
+      const refund = (roll.intensity + roll.longevity) / 40;
+      setCurrentCharges(prev => Math.min(5, prev + refund));
+    }
+
+    setRolls(prev => prev.map(r =>
+      r.id === rollId ? { ...r, expired: !r.expired } : r
     ));
   };
 
@@ -342,7 +350,7 @@ function App() {
 
     setRolls(prev => prev.map(roll => {
       if (roll.id === rollId) {
-        let updatedRoll = { ...roll };
+        let updatedRoll = { ...roll, challengeApplied: true };
         let message = '';
 
         switch (challengeModifier.type) {
@@ -584,48 +592,45 @@ function App() {
 
         {/* Filter Controls */}
         <div className="bg-white rounded-xl shadow-lg p-4 border border-purple-200">
-          <h3 className="text-xl font-bold text-gray-800 mb-4">Trope Filters</h3>
+          <h3 className="text-xl font-bold text-gray-800 mb-3">Trope Filters</h3>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {/* Target dropdown */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Target
-              </label>
-              <select
-                value={filters.target}
-                onChange={(e) => setFilters(prev => ({ ...prev, target: e.target.value }))}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-purple-500 focus:border-purple-500"
-              >
-                <option value="Self">Self</option>
-                <option value="Companion">Companion</option>
-                <option value="Ally">Ally</option>
-                <option value="Enemy">Enemy</option>
-                <option value="Animal">Animal</option>
-                <option value="Object">Object</option>
-                <option value="Area">Area</option>
-              </select>
+          <div className="space-y-2">
+            {/* Target and Situation on same row */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <div className="flex items-center gap-2">
+                <label className="text-sm font-medium text-gray-700 whitespace-nowrap">Target:</label>
+                <select
+                  value={filters.target}
+                  onChange={(e) => setFilters(prev => ({ ...prev, target: e.target.value }))}
+                  className="flex-1 px-3 py-1.5 text-sm border border-gray-300 rounded-lg focus:ring-purple-500 focus:border-purple-500"
+                >
+                  <option value="Self">Self</option>
+                  <option value="Companion">Companion</option>
+                  <option value="Ally">Ally</option>
+                  <option value="Enemy">Enemy</option>
+                  <option value="Animal">Animal</option>
+                  <option value="Object">Object</option>
+                  <option value="Area">Area</option>
+                </select>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <label className="text-sm font-medium text-gray-700 whitespace-nowrap">Situation:</label>
+                <select
+                  value={filters.situation}
+                  onChange={(e) => setFilters(prev => ({ ...prev, situation: e.target.value }))}
+                  className="flex-1 px-3 py-1.5 text-sm border border-gray-300 rounded-lg focus:ring-purple-500 focus:border-purple-500"
+                >
+                  <option value="Physical Conflict">Physical Conflict</option>
+                  <option value="Social Conflict">Social Conflict</option>
+                  <option value="At Rest">At Rest</option>
+                </select>
+              </div>
             </div>
 
-            {/* Situation dropdown */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Situation
-              </label>
-              <select
-                value={filters.situation}
-                onChange={(e) => setFilters(prev => ({ ...prev, situation: e.target.value }))}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-purple-500 focus:border-purple-500"
-              >
-                <option value="Physical Conflict">Physical Conflict</option>
-                <option value="Social Conflict">Social Conflict</option>
-                <option value="At Rest">At Rest</option>
-              </select>
-            </div>
-
-            {/* Fanservice checkbox */}
-            <div className="col-span-1 md:col-span-2">
-              <label className="flex items-center space-x-2 cursor-pointer">
+            {/* Fanservice checkbox and Gender dropdown on same row */}
+            <div className="flex items-center gap-4">
+              <label className="flex items-center gap-2 cursor-pointer">
                 <input
                   type="checkbox"
                   checked={filters.fanserviceEnabled}
@@ -634,42 +639,24 @@ function App() {
                     fanserviceEnabled: e.target.checked,
                     gender: e.target.checked ? 'masculine' : undefined
                   }))}
-                  className="w-5 h-5 text-purple-600 rounded focus:ring-purple-500"
+                  className="w-4 h-4 text-purple-600 rounded focus:ring-purple-500"
                 />
                 <span className="text-sm font-medium text-gray-700">Enable Fanservice</span>
               </label>
-            </div>
 
-            {/* Gender dropdown (conditional) */}
-            {filters.fanserviceEnabled && (
-              <div className="col-span-1 md:col-span-2">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Gender
-                </label>
-                <select
-                  value={filters.gender || 'masculine'}
-                  onChange={(e) => setFilters(prev => ({ ...prev, gender: e.target.value }))}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-purple-500 focus:border-purple-500"
-                >
-                  <option value="masculine">Masculine</option>
-                  <option value="feminine">Feminine</option>
-                </select>
-              </div>
-            )}
-
-            {/* Target Name input */}
-            <div className="col-span-1 md:col-span-2">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Target Name {filters.target === 'Self' && '(disabled for Self)'}
-              </label>
-              <input
-                type="text"
-                value={filters.targetName || ''}
-                onChange={(e) => setFilters(prev => ({ ...prev, targetName: e.target.value }))}
-                disabled={filters.target === 'Self'}
-                placeholder={filters.target === 'Self' ? 'Danny' : `Enter ${filters.target} name`}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-purple-500 focus:border-purple-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
-              />
+              {filters.fanserviceEnabled && (
+                <div className="flex items-center gap-2">
+                  <label className="text-sm font-medium text-gray-700 whitespace-nowrap">Gender:</label>
+                  <select
+                    value={filters.gender || 'masculine'}
+                    onChange={(e) => setFilters(prev => ({ ...prev, gender: e.target.value }))}
+                    className="px-3 py-1.5 text-sm border border-gray-300 rounded-lg focus:ring-purple-500 focus:border-purple-500"
+                  >
+                    <option value="masculine">Masculine</option>
+                    <option value="feminine">Feminine</option>
+                  </select>
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -1034,8 +1021,33 @@ function ChallengeModifierComponent({ challengeModifier, activeRolls, onApplyCha
 function PendingRollComponent({ pendingRoll, onFail, onBank, onApply, formatEffectDescription, filters }: any) {
   const [assignment, setAssignment] = useState<'die1ToIntensity' | 'die2ToIntensity'>('die1ToIntensity');
 
-  // Determine target from filters
-  const target = filters.target === 'Self' ? 'Danny' : (filters.targetName || filters.target);
+  const handleBank = () => {
+    let target: string;
+    if (filters.target === 'Self') {
+      target = 'Danny';
+    } else {
+      const targetName = prompt(`Enter name for ${filters.target}:`, filters.target);
+      if (!targetName || !targetName.trim()) {
+        return; // Cancel if no name provided
+      }
+      target = targetName.trim();
+    }
+    onBank(assignment, target);
+  };
+
+  const handleApply = () => {
+    let target: string;
+    if (filters.target === 'Self') {
+      target = 'Danny';
+    } else {
+      const targetName = prompt(`Enter name for ${filters.target}:`, filters.target);
+      if (!targetName || !targetName.trim()) {
+        return; // Cancel if no name provided
+      }
+      target = targetName.trim();
+    }
+    onApply(assignment, target);
+  };
 
   return (
     <div className="bg-gradient-to-br from-purple-50 to-indigo-50 rounded-xl shadow-xl p-4 border-2 border-purple-400">
@@ -1113,7 +1125,7 @@ function PendingRollComponent({ pendingRoll, onFail, onBank, onApply, formatEffe
       <div className="mb-3 bg-white rounded-lg p-2 border border-gray-300 shadow-sm">
         <p className="font-bold text-sm text-gray-800">
           <span className="text-purple-600">Target: </span>
-          <span className="text-gray-800">{target}</span>
+          <span className="text-gray-800">{filters.target === 'Self' ? 'Danny' : filters.target}</span>
         </p>
       </div>
 
@@ -1125,14 +1137,14 @@ function PendingRollComponent({ pendingRoll, onFail, onBank, onApply, formatEffe
           ❌ FAIL
         </button>
         <button
-          onClick={() => onBank(assignment, target)}
+          onClick={handleBank}
           disabled={false}
           className="flex-1 px-4 py-2 bg-gradient-to-r from-amber-600 to-orange-600 text-white font-bold text-sm rounded-lg hover:from-amber-700 hover:to-orange-700 disabled:from-gray-400 disabled:to-gray-500 shadow-md hover:shadow-lg transition-all"
         >
           🔒 BANK
         </button>
         <button
-          onClick={() => onApply(assignment, target)}
+          onClick={handleApply}
           className="flex-1 px-4 py-2 bg-gradient-to-r from-green-600 to-emerald-600 text-white font-bold text-sm rounded-lg hover:from-green-700 hover:to-emerald-700 shadow-md hover:shadow-lg transition-all"
         >
           ⚡ APPLY
@@ -1176,6 +1188,11 @@ function TropeCard({ roll, onToggleExpired, onDelete, onCollectRefund, formatEff
           {roll.bonusApplied && (
             <span className="px-2 py-0.5 bg-gradient-to-r from-green-500 to-emerald-500 text-white rounded-full text-xs font-medium shadow-sm">
               ✨ Bonus Applied
+            </span>
+          )}
+          {roll.challengeApplied && (
+            <span className="px-2 py-0.5 bg-gradient-to-r from-red-500 to-orange-500 text-white rounded-full text-xs font-medium shadow-sm">
+              ⚠️ Challenge Applied
             </span>
           )}
         </div>
