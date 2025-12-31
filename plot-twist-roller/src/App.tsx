@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import type { Roll, BonusModifier, ChallengeModifier, PendingRoll, TropeFilters } from './types';
-import { TROPE_DESCRIPTIONS } from './data/tropes';
+import { TROPE_DESCRIPTIONS, ALL_TROPES } from './data/tropes';
 import {
   rollDie,
   getRandomTrope,
@@ -1147,6 +1147,9 @@ function TropeCard({ roll, onToggleExpired, onDelete, onCollectRefund, formatEff
   const refund = showRefund ? calculateRefund(roll.intensity, roll.longevity) : 0;
   const isPermanent = roll.longevity >= 19;
 
+  // Look up trope data for TV Tropes link
+  const tropeData = ALL_TROPES.find(t => t.name === roll.trope);
+
   return (
     <div className={`rounded-lg p-3 border shadow-md hover:shadow-lg transition-all ${
       roll.expired
@@ -1208,6 +1211,20 @@ function TropeCard({ roll, onToggleExpired, onDelete, onCollectRefund, formatEff
         <p className="text-gray-700 italic text-xs mb-2 leading-relaxed">{TROPE_DESCRIPTIONS[roll.trope]}</p>
       ) : (
         <p className="text-gray-400 italic text-xs mb-2 leading-relaxed">Description not available - check TV Tropes for details</p>
+      )}
+
+      {/* TV Tropes link */}
+      {tropeData?.tvTropesUrl && (
+        <div className="mb-2">
+          <a
+            href={tropeData.tvTropesUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1 px-2 py-1 bg-gradient-to-r from-indigo-500 to-blue-500 text-white text-xs font-medium rounded-md hover:from-indigo-600 hover:to-blue-600 shadow-sm hover:shadow-md transition-all"
+          >
+            📖 TV Tropes
+          </a>
+        </div>
       )}
 
       <div className="bg-white border border-purple-300 rounded-md p-2 mb-2 shadow-sm">
