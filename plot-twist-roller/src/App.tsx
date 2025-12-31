@@ -12,7 +12,6 @@ import {
   handleReroll
 } from './utils/helpers';
 import { calculateRefund } from './utils/refundCalculator';
-import { saveGameState, loadGameState } from './utils/storage';
 import './App.css';
 
 function App() {
@@ -31,6 +30,12 @@ function App() {
   });
   const [activeTab, setActiveTab] = useState<'active' | 'expired'>('active');
   const [username] = useState('Player');
+  const [displayFilters, setDisplayFilters] = useState({
+    targets: [] as string[],
+    onlyPermanent: false,
+    onlyBonus: false,
+    onlyChallenge: false,
+  });
 
   // Calculate available and locked charges
   const lockedCharges = bankedRolls.length;
@@ -406,7 +411,7 @@ function App() {
     setChallengeModifier(null);
   };
 
-  // Save game
+  // Save game to CSV file
   const saveGame = () => {
     const gameState = {
       username,
@@ -419,31 +424,83 @@ function App() {
       challengeModifier,
       filters
     };
-    if (saveGameState(username, gameState)) {
-      alert('Game saved successfully!');
-    } else {
-      alert('Failed to save game.');
-    }
+
+    // Convert to CSV format
+    const csvData = JSON.stringify(gameState);
+    const blob = new Blob([csvData], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+
+    // Create download link
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `plot-twist-save-${new Date().toISOString().split('T')[0]}.csv`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+
+    alert('Game saved! File downloaded.');
   };
 
-  // Load game
+  // Load game from CSV file
   const loadGame = () => {
-    const loadedState = loadGameState(username);
-    if (loadedState) {
-      setCurrentCharges(loadedState.currentCharges);
-      setRolls(loadedState.rolls);
-      setBankedRolls(loadedState.bankedRolls);
-      setBonusModifier(loadedState.bonusModifier);
-      setChallengeModifier(loadedState.challengeModifier || null);
-      setFilters(loadedState.filters);
-      alert(`Game loaded! Last saved: ${new Date(loadedState.lastSaved).toLocaleString()}`);
-    } else {
-      alert('No saved game found for this username.');
-    }
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.csv';
+
+    input.onchange = (e: any) => {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = (event: any) => {
+        try {
+          const csvContent = event.target.result;
+          const loadedState = JSON.parse(csvContent);
+
+          setCurrentCharges(loadedState.currentCharges);
+          setRolls(loadedState.rolls);
+          setBankedRolls(loadedState.bankedRolls);
+          setBonusModifier(loadedState.bonusModifier);
+          setChallengeModifier(loadedState.challengeModifier || null);
+          setFilters(loadedState.filters);
+          alert(`Game loaded! Last saved: ${new Date(loadedState.lastSaved).toLocaleString()}`);
+        } catch (error) {
+          alert('Failed to load game. Invalid file format.');
+        }
+      };
+      reader.readAsText(file);
+    };
+
+    input.click();
   };
 
-  const activeRolls = rolls.filter(r => !r.expired);
+  // Filter active and expired rolls
+  const allActiveRolls = rolls.filter(r => !r.expired);
   const expiredRolls = rolls.filter(r => r.expired);
+
+  // Apply display filters to active rolls
+  const activeRolls = allActiveRolls.filter(roll => {
+    // Target filter
+    if (displayFilters.targets.length > 0) {
+      const targetType = roll.appliedTo === 'Danny' ? 'Self' :
+        ['Companion', 'Ally', 'Enemy', 'Animal', 'Object', 'Area'].find(t =>
+          roll.appliedTo?.toLowerCase().includes(t.toLowerCase())
+        ) || 'Companion';
+      if (!displayFilters.targets.includes(targetType)) return false;
+    }
+
+    // Permanent filter
+    if (displayFilters.onlyPermanent && roll.longevity < 19) return false;
+
+    // Bonus filter
+    if (displayFilters.onlyBonus && !roll.bonusApplied) return false;
+
+    // Challenge filter
+    if (displayFilters.onlyChallenge && !roll.challengeApplied) return false;
+
+    return true;
+  });
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 py-4 px-4">
@@ -494,7 +551,7 @@ function App() {
                     isFullyAvailable
                       ? 'border-purple-600 shadow-md'
                       : isFullyFilled
-                      ? 'border-amber-600 shadow-md'
+                      ? 'border-gray-600 shadow-md'
                       : 'border-gray-300'
                   }`}
                 >
@@ -509,11 +566,11 @@ function App() {
                     />
                   )}
                   {!isPartiallyAvailable && isFullyFilled && (
-                    <div className="absolute inset-0 bg-gradient-to-br from-amber-400 to-orange-500" />
+                    <div className="absolute inset-0 bg-gradient-to-br from-gray-600 to-gray-800" />
                   )}
                   {!isPartiallyAvailable && isPartiallyLocked && (
                     <div
-                      className="absolute inset-0 bg-gradient-to-br from-amber-400 to-orange-500"
+                      className="absolute inset-0 bg-gradient-to-br from-gray-600 to-gray-800"
                       style={{ opacity: lockedOpacity }}
                     />
                   )}
@@ -536,8 +593,8 @@ function App() {
               Available: <span className="font-semibold text-purple-600">{formatCharges(availableCharges)}</span>
             </span>
             {lockedCharges > 0 && (
-              <span className="text-amber-600">
-                <span className="font-semibold">{lockedCharges}</span> locked in bank
+              <span className="text-gray-600">
+                <span className="font-semibold text-gray-800">{lockedCharges}</span> locked in bank
               </span>
             )}
             <span className="text-gray-600">
@@ -748,6 +805,78 @@ function App() {
               </button>
             </div>
           </div>
+
+          {/* Display Filters for Active Tab */}
+          {activeTab === 'active' && allActiveRolls.length > 0 && (
+            <div className="p-3 bg-gray-100 border-b border-gray-200">
+              <div className="flex flex-wrap gap-3 items-center text-xs">
+                <span className="font-semibold text-gray-700">Filter:</span>
+
+                {/* Target Type Filters */}
+                {['Self', 'Companion', 'Ally', 'Enemy', 'Animal', 'Object', 'Area'].map(target => (
+                  <label key={target} className="flex items-center gap-1 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={displayFilters.targets.includes(target)}
+                      onChange={(e) => {
+                        if (e.target.checked) {
+                          setDisplayFilters(prev => ({ ...prev, targets: [...prev.targets, target] }));
+                        } else {
+                          setDisplayFilters(prev => ({ ...prev, targets: prev.targets.filter(t => t !== target) }));
+                        }
+                      }}
+                      className="w-3 h-3 rounded"
+                    />
+                    <span className="text-gray-700">{target}</span>
+                  </label>
+                ))}
+
+                <span className="text-gray-400">|</span>
+
+                {/* Status Filters */}
+                <label className="flex items-center gap-1 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={displayFilters.onlyPermanent}
+                    onChange={(e) => setDisplayFilters(prev => ({ ...prev, onlyPermanent: e.target.checked }))}
+                    className="w-3 h-3 rounded"
+                  />
+                  <span className="text-gray-700">Permanent</span>
+                </label>
+
+                <label className="flex items-center gap-1 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={displayFilters.onlyBonus}
+                    onChange={(e) => setDisplayFilters(prev => ({ ...prev, onlyBonus: e.target.checked }))}
+                    className="w-3 h-3 rounded"
+                  />
+                  <span className="text-gray-700">Bonus Applied</span>
+                </label>
+
+                <label className="flex items-center gap-1 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={displayFilters.onlyChallenge}
+                    onChange={(e) => setDisplayFilters(prev => ({ ...prev, onlyChallenge: e.target.checked }))}
+                    className="w-3 h-3 rounded"
+                  />
+                  <span className="text-gray-700">Challenge Applied</span>
+                </label>
+
+                {/* Clear Filters */}
+                {(displayFilters.targets.length > 0 || displayFilters.onlyPermanent || displayFilters.onlyBonus || displayFilters.onlyChallenge) && (
+                  <button
+                    onClick={() => setDisplayFilters({ targets: [], onlyPermanent: false, onlyBonus: false, onlyChallenge: false })}
+                    className="ml-2 px-2 py-0.5 bg-gray-300 hover:bg-gray-400 text-gray-700 rounded text-xs font-medium"
+                  >
+                    Clear All
+                  </button>
+                )}
+              </div>
+            </div>
+          )}
+
           <div className="p-3 space-y-2 bg-gradient-to-br from-gray-50 to-purple-50">
             {activeTab === 'active' && activeRolls.map(roll => (
               <TropeCard
@@ -795,10 +924,11 @@ function BonusModifierComponent({ bonusModifier, activeRolls, onApplyBonus }: an
 
   // Determine if this bonus requires choosing a stat
   const requiresChoice = ['plus5'].includes(bonusModifier.type);
-  const isAutomatic = ['permanent', 'swap', 'refresh', 'retarget', 'plus3charge', 'allatonce'].includes(bonusModifier.type);
+  const isAutomatic = ['permanent', 'swap', 'refresh', 'retarget', 'allatonce'].includes(bonusModifier.type);
+  const requiresTrope = !['plus3charge'].includes(bonusModifier.type);
 
   const handleApply = () => {
-    if (selectedTropeId === null) {
+    if (requiresTrope && selectedTropeId === null) {
       alert('Please select a trope to apply the bonus modifier to.');
       return;
     }
@@ -825,7 +955,14 @@ function BonusModifierComponent({ bonusModifier, activeRolls, onApplyBonus }: an
         <p className="font-bold text-base text-gray-800 mb-1">{bonusModifier.name}</p>
         <p className="text-xs text-gray-700 mb-3">{bonusModifier.description}</p>
 
-        {activeRolls.length > 0 ? (
+        {!requiresTrope ? (
+          <button
+            onClick={handleApply}
+            className="w-full px-4 py-2 bg-gradient-to-r from-yellow-600 to-amber-600 text-white font-bold text-sm rounded-lg hover:from-yellow-700 hover:to-amber-700 shadow-md hover:shadow-lg transition-all"
+          >
+            ⚡ Apply Bonus
+          </button>
+        ) : activeRolls.length > 0 ? (
           <>
             <div className="mb-2">
               <label className="block text-xs font-bold text-gray-700 mb-1">Select Trope:</label>
@@ -903,11 +1040,12 @@ function ChallengeModifierComponent({ challengeModifier, activeRolls, onApplyCha
 
   // Determine if this challenge requires choosing a stat
   const requiresChoice = ['minus5'].includes(challengeModifier.type);
-  const isAutomatic = ['expire', 'rebound', 'balance', 'subvert', 'minus2charge'].includes(challengeModifier.type);
+  const isAutomatic = ['expire', 'rebound', 'balance', 'subvert'].includes(challengeModifier.type);
+  const requiresTrope = !['minus2charge'].includes(challengeModifier.type);
 
   const handleApply = () => {
     // Auto-apply challenges don't need a trope selection
-    if (challengeModifier.type === 'minus2charge') {
+    if (!requiresTrope) {
       onApplyChallenge(null, 'auto');
       return;
     }
@@ -939,12 +1077,12 @@ function ChallengeModifierComponent({ challengeModifier, activeRolls, onApplyCha
         <p className="font-bold text-base text-gray-800 mb-1">{challengeModifier.name}</p>
         <p className="text-xs text-gray-700 mb-3">{challengeModifier.description}</p>
 
-        {challengeModifier.type === 'minus2charge' ? (
+        {!requiresTrope ? (
           <button
             onClick={handleApply}
             className="w-full px-4 py-2 bg-gradient-to-r from-red-600 to-orange-600 text-white font-bold text-sm rounded-lg hover:from-red-700 hover:to-orange-700 shadow-md hover:shadow-lg transition-all"
           >
-            ⚡ Apply Challenge (Auto)
+            ⚡ Apply Challenge
           </button>
         ) : activeRolls.length > 0 ? (
           <>
@@ -1162,14 +1300,54 @@ function TropeCard({ roll, onToggleExpired, onDelete, onCollectRefund, formatEff
   // Look up trope data for TV Tropes link
   const tropeData = ALL_TROPES.find(t => t.name === roll.trope);
 
-  return (
-    <div className={`rounded-lg p-3 border shadow-md hover:shadow-lg transition-all ${
-      roll.expired
-        ? 'border-gray-400 bg-gradient-to-br from-gray-50 to-gray-100'
-        : isPermanent
+  // Determine target type for color tinting
+  const getTargetType = (appliedTo: string) => {
+    if (appliedTo === 'Danny') return 'Self';
+    // Check if it's one of the standard types
+    const standardTypes = ['Companion', 'Ally', 'Enemy', 'Animal', 'Object', 'Area'];
+    for (const type of standardTypes) {
+      if (appliedTo.toLowerCase().includes(type.toLowerCase())) return type;
+    }
+    // Default: assume it's a named target, likely Companion
+    return 'Companion';
+  };
+
+  const targetType = getTargetType(roll.appliedTo || 'Self');
+
+  // Color schemes by target type
+  const getColorScheme = () => {
+    if (roll.expired) {
+      return 'border-gray-400 bg-gradient-to-br from-gray-50 to-gray-100';
+    }
+
+    const schemes: Record<string, string> = {
+      'Self': isPermanent
         ? 'border-purple-500 bg-gradient-to-br from-purple-100 to-indigo-100'
-        : 'border-purple-400 bg-gradient-to-br from-purple-50 to-indigo-50'
-    }`}>
+        : 'border-purple-400 bg-gradient-to-br from-purple-50 to-indigo-50',
+      'Companion': isPermanent
+        ? 'border-blue-500 bg-gradient-to-br from-blue-100 to-cyan-100'
+        : 'border-blue-400 bg-gradient-to-br from-blue-50 to-cyan-50',
+      'Ally': isPermanent
+        ? 'border-green-500 bg-gradient-to-br from-green-100 to-emerald-100'
+        : 'border-green-400 bg-gradient-to-br from-green-50 to-emerald-50',
+      'Enemy': isPermanent
+        ? 'border-red-500 bg-gradient-to-br from-red-100 to-orange-100'
+        : 'border-red-400 bg-gradient-to-br from-red-50 to-orange-50',
+      'Animal': isPermanent
+        ? 'border-amber-500 bg-gradient-to-br from-amber-100 to-yellow-100'
+        : 'border-amber-400 bg-gradient-to-br from-amber-50 to-yellow-50',
+      'Object': isPermanent
+        ? 'border-gray-500 bg-gradient-to-br from-gray-100 to-slate-100'
+        : 'border-gray-400 bg-gradient-to-br from-gray-50 to-slate-50',
+      'Area': isPermanent
+        ? 'border-teal-500 bg-gradient-to-br from-teal-100 to-sky-100'
+        : 'border-teal-400 bg-gradient-to-br from-teal-50 to-sky-50',
+    };
+    return schemes[targetType] || schemes['Self'];
+  };
+
+  return (
+    <div className={`rounded-lg p-3 shadow-md hover:shadow-lg transition-all ${getColorScheme()}`}>
       <div className="flex justify-between items-start mb-2">
         <div className="flex flex-wrap gap-1">
           <span className="px-2 py-0.5 bg-gradient-to-r from-blue-500 to-cyan-500 text-white rounded-full text-xs font-medium shadow-sm">
