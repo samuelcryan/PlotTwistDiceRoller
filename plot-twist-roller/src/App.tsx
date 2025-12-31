@@ -1204,7 +1204,11 @@ function TropeCard({ roll, onToggleExpired, onDelete, onCollectRefund, formatEff
       </div>
 
       <h3 className="text-lg font-bold mb-1 text-gray-800">{roll.trope}</h3>
-      <p className="text-gray-700 italic text-xs mb-2 leading-relaxed">{TROPE_DESCRIPTIONS[roll.trope]}</p>
+      {TROPE_DESCRIPTIONS[roll.trope] ? (
+        <p className="text-gray-700 italic text-xs mb-2 leading-relaxed">{TROPE_DESCRIPTIONS[roll.trope]}</p>
+      ) : (
+        <p className="text-gray-400 italic text-xs mb-2 leading-relaxed">Description not available - check TV Tropes for details</p>
+      )}
 
       <div className="bg-white border border-purple-300 rounded-md p-2 mb-2 shadow-sm">
         <p className="font-bold text-sm text-purple-800">
