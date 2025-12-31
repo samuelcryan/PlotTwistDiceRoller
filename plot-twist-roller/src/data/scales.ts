@@ -39,7 +39,30 @@ export const LONGEVITY_SCALE: { [key: number]: string } = {
   15: "5 days",
   16: "2 weeks",
   17: "1 month",
-  18: "Permanent (degrades)",
+  18: "2 months",
   19: "Permanent (never expires)",
   20: "Permanent (never expires)"
+};
+
+export const USES_SCALE: { [key: number]: string } = {
+  1: "Blind Reroll",
+  2: "1 use",
+  3: "1 use",
+  4: "1 use",
+  5: "2 uses",
+  6: "2 uses",
+  7: "2 uses",
+  8: "3 uses",
+  9: "3 uses",
+  10: "3 uses",
+  11: "5 uses",
+  12: "5 uses",
+  13: "5 uses",
+  14: "7 uses",
+  15: "7 uses",
+  16: "7 uses",
+  17: "10 uses",
+  18: "10 uses",
+  19: "Permanent (unlimited uses)",
+  20: "Permanent (unlimited uses)"
 };

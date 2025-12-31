@@ -4060,6 +4060,24 @@ export const ALL_TROPES: TropeData[] = [
     subversion: "Mighty Glacier",
     subversionUrl: "https://tvtropes.org/pmwiki/pmwiki.php/Main/MightyGlacier",
   },
+  {
+    name: "The Nondescript",
+    targets: ["Companion", "Ally"],
+    gender: "any",
+    contexts: ["Social", "At Rest"],
+    description: "Naturally forgettable and able to blend seamlessly into any crowd. People's eyes glaze over and memories fade quickly.",
+    usesOngoing: "Ongoing",
+    subversion: "Unforgettable Presence",
+  },
+  {
+    name: "Memory Palace",
+    targets: ["Self"],
+    gender: "any",
+    contexts: ["Combat", "Social", "At Rest"],
+    description: "Perfect recall through mental organization of memories into structured mental space. Information stored with photographic precision and instant retrieval.",
+    usesOngoing: "Ongoing",
+    subversion: "Amnesia",
+  },
 ];
 
 // Derived structures for backward compatibility

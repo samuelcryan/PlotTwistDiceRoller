@@ -353,6 +353,27 @@ function App() {
       return;
     }
 
+    // Handle subversion - auto-apply to all banked tropes if available
+    if (challengeModifier.type === 'subvert') {
+      if (bankedRolls.length > 0) {
+        // Auto-apply to all banked tropes
+        let subvertedCount = 0;
+        setBankedRolls(prev => prev.map(roll => {
+          const tropeData = ALL_TROPES.find(t => t.name === roll.trope);
+          if (tropeData?.subversion) {
+            subvertedCount++;
+            return { ...roll, trope: tropeData.subversion, challengeApplied: true };
+          }
+          return roll;
+        }));
+        alert(`Subversion applied! ${subvertedCount} banked trope(s) subverted.`);
+        setChallengeModifier(null);
+        return;
+      }
+      // If no banked tropes, allow selecting an active trope
+      // (handled by the normal flow below)
+    }
+
     setRolls(prev => prev.map(roll => {
       if (roll.id === rollId) {
         let updatedRoll = { ...roll, challengeApplied: true };
@@ -377,8 +398,15 @@ function App() {
             break;
 
           case 'subvert':
-            // This would require looking up the subversion from trope data
-            message = 'Subversion feature not yet implemented.';
+            // Look up the subversion from trope data
+            const tropeData = ALL_TROPES.find(t => t.name === roll.trope);
+            if (tropeData?.subversion) {
+              updatedRoll.trope = tropeData.subversion;
+              message = `Trope subverted to: ${tropeData.subversion}`;
+            } else {
+              message = 'This trope has no subversion available.';
+              return roll; // No change if no subversion
+            }
             break;
 
           case 'rebound':
@@ -732,6 +760,7 @@ function App() {
           <ChallengeModifierComponent
             challengeModifier={challengeModifier}
             activeRolls={activeRolls}
+            bankedRolls={bankedRolls}
             onApplyChallenge={applyChallengeModifier}
           />
         )}
@@ -1034,7 +1063,7 @@ function BonusModifierComponent({ bonusModifier, activeRolls, onApplyBonus }: an
 }
 
 // Challenge Modifier Component
-function ChallengeModifierComponent({ challengeModifier, activeRolls, onApplyChallenge }: any) {
+function ChallengeModifierComponent({ challengeModifier, activeRolls, bankedRolls, onApplyChallenge }: any) {
   const [selectedTropeId, setSelectedTropeId] = useState<number | null>(null);
   const [applyTo, setApplyTo] = useState<'intensity' | 'longevity'>('intensity');
 
@@ -1077,7 +1106,22 @@ function ChallengeModifierComponent({ challengeModifier, activeRolls, onApplyCha
         <p className="font-bold text-base text-gray-800 mb-1">{challengeModifier.name}</p>
         <p className="text-xs text-gray-700 mb-3">{challengeModifier.description}</p>
 
-        {!requiresTrope ? (
+        {/* Special handling for subversion with banked tropes */}
+        {challengeModifier.type === 'subvert' && bankedRolls?.length > 0 ? (
+          <>
+            <div className="mb-3 bg-red-100 border border-red-400 rounded-lg p-2">
+              <p className="text-xs font-semibold text-red-800">
+                ⚠️ Will automatically subvert all {bankedRolls.length} banked trope(s)!
+              </p>
+            </div>
+            <button
+              onClick={handleApply}
+              className="w-full px-4 py-2 bg-gradient-to-r from-red-600 to-orange-600 text-white font-bold text-sm rounded-lg hover:from-red-700 hover:to-orange-700 shadow-md hover:shadow-lg transition-all"
+            >
+              ⚡ Subvert All Banked Tropes
+            </button>
+          </>
+        ) : !requiresTrope ? (
           <button
             onClick={handleApply}
             className="w-full px-4 py-2 bg-gradient-to-r from-red-600 to-orange-600 text-white font-bold text-sm rounded-lg hover:from-red-700 hover:to-orange-700 shadow-md hover:shadow-lg transition-all"
@@ -1239,7 +1283,7 @@ function PendingRollComponent({ pendingRoll, onFail, onBank, onApply, formatEffe
               Int: {pendingRoll.die1} | Long: {pendingRoll.die2}
             </div>
             <div className="text-xs text-gray-600 mt-1">
-              {formatEffectDescription(pendingRoll.die1, pendingRoll.die2)}
+              {formatEffectDescription(pendingRoll.die1, pendingRoll.die2, pendingRoll.trope)}
             </div>
           </button>
           <button
@@ -1254,7 +1298,7 @@ function PendingRollComponent({ pendingRoll, onFail, onBank, onApply, formatEffe
               Int: {pendingRoll.die2} | Long: {pendingRoll.die1}
             </div>
             <div className="text-xs text-gray-600 mt-1">
-              {formatEffectDescription(pendingRoll.die2, pendingRoll.die1)}
+              {formatEffectDescription(pendingRoll.die2, pendingRoll.die1, pendingRoll.trope)}
             </div>
           </button>
         </div>
@@ -1424,7 +1468,7 @@ function TropeCard({ roll, onToggleExpired, onDelete, onCollectRefund, formatEff
 
       <div className="bg-white border border-purple-300 rounded-md p-2 mb-2 shadow-sm">
         <p className="font-bold text-sm text-purple-800">
-          {formatEffectDescription(roll.intensity, roll.longevity)}
+          {formatEffectDescription(roll.intensity, roll.longevity, roll.trope)}
         </p>
       </div>
 
