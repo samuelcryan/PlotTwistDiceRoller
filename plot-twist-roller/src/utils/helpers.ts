@@ -132,54 +132,90 @@ export const generateId = (): number => {
 };
 
 /**
- * Generate a bonus modifier
+ * Generate a bonus modifier from Natural 20
  */
 export const generateBonusModifier = (dayEarned: number) => {
   const modifierTypes = [
     {
-      type: 'plus3' as const,
-      name: '+3 to Dice Value',
-      description: 'Add 3 to any existing trope\'s Intensity or Longevity die (maximum 19)'
-    },
-    {
-      type: 'minus5' as const,
-      name: '-5 to Dice Value',
-      description: 'Reduce any existing trope\'s Intensity or Longevity die by 5 (minimum 2)'
-    },
-    {
-      type: 'reroll' as const,
-      name: 'Reroll Dice',
-      description: 'Reroll either the Intensity or Longevity die of any active trope'
-    },
-    {
-      type: 'expire' as const,
-      name: 'Expire Trope',
-      description: 'Immediately end any active trope regardless of remaining duration'
-    },
-    {
-      type: 'swap' as const,
-      name: 'Swap Dice Values',
-      description: 'Exchange the Intensity and Longevity values of any active trope'
+      type: 'plus5' as const,
+      name: '+5 to Die Roll',
+      description: 'Add 5 to any existing trope\'s Intensity or Longevity die (maximum 20)'
     },
     {
       type: 'permanent' as const,
       name: 'Make Permanent',
-      description: 'Set any trope\'s Longevity value to 18 (permanent but degrading)'
+      description: 'Set any trope\'s Longevity value to 20 (true permanent, never expires)'
     },
     {
       type: 'retarget' as const,
-      name: 'Change Target',
+      name: 'Change Active Trope Target',
       description: 'Move a trope from its current target to a different valid target'
     },
     {
       type: 'plus3charge' as const,
-      name: '+3 Charges',
+      name: '+3 Energy',
       description: 'Immediately restore 3 charges (auto-applies, up to maximum capacity)'
     },
     {
       type: 'refresh' as const,
-      name: 'Refresh Duration',
-      description: 'Reset any trope\'s duration timer to its original Longevity value'
+      name: 'Refresh Trope',
+      description: 'Reset any active or expired trope\'s duration to its original Longevity value'
+    },
+    {
+      type: 'swap' as const,
+      name: 'Swap Die Rolls',
+      description: 'Exchange dice values between two different tropes (select Intensity or Longevity from each)'
+    },
+    {
+      type: 'allatonce' as const,
+      name: 'All at Once',
+      description: 'Set a trope\'s Intensity to 20 and Longevity to 2 (maximum power, minimum duration)'
+    }
+  ];
+
+  const randomModifier = modifierTypes[Math.floor(Math.random() * modifierTypes.length)];
+
+  return {
+    id: generateId(),
+    ...randomModifier,
+    dayEarned
+  };
+};
+
+/**
+ * Generate a challenge modifier from Natural 1
+ */
+export const generateChallengeModifier = (dayEarned: number) => {
+  const modifierTypes = [
+    {
+      type: 'expire' as const,
+      name: 'Expire Active Trope',
+      description: 'Immediately end any active trope regardless of remaining duration'
+    },
+    {
+      type: 'minus5' as const,
+      name: '-5 to Die Roll',
+      description: 'Reduce any existing trope\'s Intensity or Longevity die by 5 (minimum 2)'
+    },
+    {
+      type: 'subvert' as const,
+      name: 'Subvert Trope',
+      description: 'Replace a selected trope with its subversion (if available)'
+    },
+    {
+      type: 'rebound' as const,
+      name: 'Rebound',
+      description: 'Trope is reassigned to a different present target (if available)'
+    },
+    {
+      type: 'balance' as const,
+      name: 'Balance in Everything',
+      description: 'A self-targeted trope is duplicated on an enemy with the same values'
+    },
+    {
+      type: 'minus2charge' as const,
+      name: '-2 Energy',
+      description: 'Immediately lose 2 charges (auto-applies, minimum 0)'
     }
   ];
 
