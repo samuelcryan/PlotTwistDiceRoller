@@ -1,5 +1,5 @@
 import { ALL_TROPES } from '../data/tropes';
-import { INTENSITY_SCALE, LONGEVITY_SCALE } from '../data/scales';
+import { INTENSITY_SCALE, LONGEVITY_SCALE, USES_SCALE } from '../data/scales';
 import type { TropeData } from '../data/tropes';
 import type { TropeFilters } from '../types';
 
@@ -54,16 +54,34 @@ export const getStoryDate = (days: number): string => {
 /**
  * Format effect description in natural language
  */
-export const formatEffectDescription = (intensity: number, longevity: number): string => {
+export const formatEffectDescription = (intensity: number, longevity: number, tropeName?: string): string => {
   const intensityDesc = INTENSITY_SCALE[intensity];
-  const longevityDesc = LONGEVITY_SCALE[longevity];
 
-  if (longevity === 19) {
-    return `A ${intensityDesc.toLowerCase()} effect that is permanent (never expires)`;
-  } else if (longevity === 18) {
-    return `A ${intensityDesc.toLowerCase()} effect that is permanent (degrades)`;
+  // Check if this trope uses the Uses system instead of duration
+  let usesOngoing = 'Ongoing'; // default
+  if (tropeName) {
+    const tropeData = ALL_TROPES.find(t => t.name === tropeName);
+    if (tropeData) {
+      usesOngoing = tropeData.usesOngoing;
+    }
+  }
+
+  if (usesOngoing === 'Uses') {
+    // Use the Uses scale instead of Longevity scale
+    const usesDesc = USES_SCALE[longevity];
+    if (longevity >= 19) {
+      return `A ${intensityDesc.toLowerCase()} effect with ${usesDesc.toLowerCase()}`;
+    } else {
+      return `A ${intensityDesc.toLowerCase()} effect with ${usesDesc.toLowerCase()}`;
+    }
   } else {
-    return `A ${intensityDesc.toLowerCase()} effect that lasts ${longevityDesc.toLowerCase()}`;
+    // Use the Longevity scale (duration-based)
+    const longevityDesc = LONGEVITY_SCALE[longevity];
+    if (longevity >= 19) {
+      return `A ${intensityDesc.toLowerCase()} effect that is ${longevityDesc.toLowerCase()}`;
+    } else {
+      return `A ${intensityDesc.toLowerCase()} effect that lasts ${longevityDesc.toLowerCase()}`;
+    }
   }
 };
 
