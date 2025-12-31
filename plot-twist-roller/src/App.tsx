@@ -27,7 +27,8 @@ function App() {
     target: 'Self',
     situation: 'Physical Conflict',
     fanserviceEnabled: false,
-    gender: undefined
+    gender: undefined,
+    targetName: undefined
   });
   const [activeTab, setActiveTab] = useState<'active' | 'expired'>('active');
   const [username] = useState('Player');
@@ -537,17 +538,6 @@ function App() {
           </div>
         </div>
 
-        {/* Pending Roll Workflow - Moved between charge bar and pull button */}
-        {pendingRoll && (
-          <PendingRollComponent
-            pendingRoll={pendingRoll}
-            onFail={handleFail}
-            onBank={handleBank}
-            onApply={handleApply}
-            formatEffectDescription={formatEffectDescription}
-          />
-        )}
-
         {/* Control Panel */}
         <div className="bg-white rounded-xl shadow-lg p-4 border border-purple-200">
           <div className="flex flex-wrap justify-between items-center gap-3">
@@ -579,6 +569,18 @@ function App() {
             </div>
           </div>
         </div>
+
+        {/* Pending Roll Workflow */}
+        {pendingRoll && (
+          <PendingRollComponent
+            pendingRoll={pendingRoll}
+            onFail={handleFail}
+            onBank={handleBank}
+            onApply={handleApply}
+            formatEffectDescription={formatEffectDescription}
+            filters={filters}
+          />
+        )}
 
         {/* Filter Controls */}
         <div className="bg-white rounded-xl shadow-lg p-4 border border-purple-200">
@@ -654,6 +656,21 @@ function App() {
                 </select>
               </div>
             )}
+
+            {/* Target Name input */}
+            <div className="col-span-1 md:col-span-2">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Target Name {filters.target === 'Self' && '(disabled for Self)'}
+              </label>
+              <input
+                type="text"
+                value={filters.targetName || ''}
+                onChange={(e) => setFilters(prev => ({ ...prev, targetName: e.target.value }))}
+                disabled={filters.target === 'Self'}
+                placeholder={filters.target === 'Self' ? 'Danny' : `Enter ${filters.target} name`}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-purple-500 focus:border-purple-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
+              />
+            </div>
           </div>
         </div>
 
@@ -1014,12 +1031,11 @@ function ChallengeModifierComponent({ challengeModifier, activeRolls, onApplyCha
 }
 
 // Pending Roll Component
-function PendingRollComponent({ pendingRoll, onFail, onBank, onApply, formatEffectDescription }: any) {
+function PendingRollComponent({ pendingRoll, onFail, onBank, onApply, formatEffectDescription, filters }: any) {
   const [assignment, setAssignment] = useState<'die1ToIntensity' | 'die2ToIntensity'>('die1ToIntensity');
-  const [targetType, setTargetType] = useState('Danny');
-  const [targetName, setTargetName] = useState('');
 
-  const target = targetType === 'Danny' ? 'Danny' : targetName || targetType;
+  // Determine target from filters
+  const target = filters.target === 'Self' ? 'Danny' : (filters.targetName || filters.target);
 
   return (
     <div className="bg-gradient-to-br from-purple-50 to-indigo-50 rounded-xl shadow-xl p-4 border-2 border-purple-400">
@@ -1095,27 +1111,10 @@ function PendingRollComponent({ pendingRoll, onFail, onBank, onApply, formatEffe
       </div>
 
       <div className="mb-3 bg-white rounded-lg p-2 border border-gray-300 shadow-sm">
-        <label className="block font-bold text-sm text-gray-800 mb-2">Target:</label>
-        <select
-          value={targetType}
-          onChange={(e) => setTargetType(e.target.value)}
-          className="w-full p-2 border border-gray-300 text-sm rounded-lg focus:border-purple-500 focus:ring-1 focus:ring-purple-200 transition-all"
-        >
-          <option value="Danny">Danny</option>
-          <option value="Ally">Ally</option>
-          <option value="Enemy">Enemy</option>
-          <option value="Neutral">Neutral</option>
-          <option value="Object">Object</option>
-        </select>
-        {targetType !== 'Danny' && (
-          <input
-            type="text"
-            placeholder="Enter target name"
-            value={targetName}
-            onChange={(e) => setTargetName(e.target.value)}
-            className="w-full p-2 border border-gray-300 text-sm rounded-lg mt-2 focus:border-purple-500 focus:ring-1 focus:ring-purple-200 transition-all"
-          />
-        )}
+        <p className="font-bold text-sm text-gray-800">
+          <span className="text-purple-600">Target: </span>
+          <span className="text-gray-800">{target}</span>
+        </p>
       </div>
 
       <div className="flex gap-2">
@@ -1146,7 +1145,7 @@ function PendingRollComponent({ pendingRoll, onFail, onBank, onApply, formatEffe
 // Trope Card Component
 function TropeCard({ roll, onToggleExpired, onDelete, onCollectRefund, formatEffectDescription, showRefund }: any) {
   const refund = showRefund ? calculateRefund(roll.intensity, roll.longevity) : 0;
-  const isPermanent = roll.longevity === 20;
+  const isPermanent = roll.longevity >= 19;
 
   return (
     <div className={`rounded-lg p-3 border shadow-md hover:shadow-lg transition-all ${

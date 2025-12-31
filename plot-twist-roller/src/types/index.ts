@@ -55,6 +55,7 @@ export interface TropeFilters {
   situation: string;     // Physical Conflict, Social Conflict, At Rest
   fanserviceEnabled: boolean;
   gender?: string;       // masculine, feminine (only used if fanservice enabled)
+  targetName?: string;   // Name of the target (disabled when Self is selected)
 }
 
 export interface GameState {

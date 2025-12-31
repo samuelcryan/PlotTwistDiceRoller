@@ -18,7 +18,7 @@ export const INTENSITY_SCALE: { [key: number]: string } = {
   17: "Very significant change",
   18: "Extreme, dramatic change",
   19: "Overwhelming, reality-warping change",
-  20: "Bonus Modifier"
+  20: "Overwhelming, reality-warping change"
 };
 
 export const LONGEVITY_SCALE: { [key: number]: string } = {
@@ -41,5 +41,5 @@ export const LONGEVITY_SCALE: { [key: number]: string } = {
   17: "1 month",
   18: "Permanent (degrades)",
   19: "Permanent (never expires)",
-  20: "Bonus Modifier"
+  20: "Permanent (never expires)"
 };
