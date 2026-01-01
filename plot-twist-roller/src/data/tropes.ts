@@ -1961,7 +1961,7 @@ export const ALL_TROPES: TropeData[] = [
   },
   {
     name: "Statuesque Stunner",
-    targets: ["Self"],
+    targets: ["Self", "Ally"],
     gender: "feminine",
     contexts: ["Social", "At Rest"],
     description: "Very tall and striking appearance. Height adds to attractiveness.",
@@ -1981,7 +1981,7 @@ export const ALL_TROPES: TropeData[] = [
   },
   {
     name: "Hartman Hips",
-    targets: ["Self"],
+    targets: ["Self", "Ally"],
     gender: "feminine",
     contexts: ["Social", "At Rest"],
     description: "Notably wider hips. Distinctive body shape.",
@@ -2001,7 +2001,7 @@ export const ALL_TROPES: TropeData[] = [
   },
   {
     name: "Hidden Buxom",
-    targets: ["Self"],
+    targets: ["Self", "Ally"],
     gender: "feminine",
     contexts: ["Social", "At Rest"],
     description: "Large chest concealed by clothing. Size not immediately apparent.",
@@ -2602,7 +2602,7 @@ export const ALL_TROPES: TropeData[] = [
   },
   {
     name: "Robot Buddy",
-    targets: ["Ally"],
+    targets: ["Object"],
     gender: "any",
     contexts: ["At Rest"],
     description: "Mechanical companion. Robotic friend.",
@@ -2642,7 +2642,7 @@ export const ALL_TROPES: TropeData[] = [
   },
   {
     name: "Precious Puppy",
-    targets: ["Self", "Ally", "Human"],
+    targets: ["Animal"],
     gender: "any",
     contexts: ["At Rest"],
     description: "Young dog inspiring protective instincts. Emotional manipulation via cuteness.",
@@ -2979,16 +2979,6 @@ export const ALL_TROPES: TropeData[] = [
     usesOngoing: "Ongoing",
     tvTropesUrl: "https://tvtropes.org/pmwiki/pmwiki.php/Main/MassageScenario",
     subversion: "No Physical Contact",
-  },
-  {
-    name: "Wind Billows Skirt",
-    targets: ["Ally"],
-    gender: "feminine",
-    contexts: ["Social", "At Rest"],
-    description: "Breeze catches fabric perfectly. Updraft timing optimal.",
-    usesOngoing: "Ongoing",
-    tvTropesUrl: "https://tvtropes.org/pmwiki/pmwiki.php/Main/WindBillowsSkirt",
-    subversion: "Weighted Hem",
   },
   {
     name: "Rule of Cool",
