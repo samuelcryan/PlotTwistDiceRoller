@@ -690,7 +690,6 @@ function App() {
                   className="flex-1 px-3 py-1.5 text-sm border border-gray-300 rounded-lg focus:ring-purple-500 focus:border-purple-500"
                 >
                   <option value="Self">Self</option>
-                  <option value="Companion">Companion</option>
                   <option value="Ally">Ally</option>
                   <option value="Enemy">Enemy</option>
                   <option value="Animal">Animal</option>
@@ -842,7 +841,7 @@ function App() {
                 <span className="font-semibold text-gray-700">Filter:</span>
 
                 {/* Target Type Filters */}
-                {['Self', 'Companion', 'Ally', 'Enemy', 'Animal', 'Object', 'Area'].map(target => (
+                {['Self', 'Ally', 'Enemy', 'Animal', 'Object', 'Area'].map(target => (
                   <label key={target} className="flex items-center gap-1 cursor-pointer">
                     <input
                       type="checkbox"
@@ -1348,12 +1347,12 @@ function TropeCard({ roll, onToggleExpired, onDelete, onCollectRefund, formatEff
   const getTargetType = (appliedTo: string) => {
     if (appliedTo === 'Danny') return 'Self';
     // Check if it's one of the standard types
-    const standardTypes = ['Companion', 'Ally', 'Enemy', 'Animal', 'Object', 'Area'];
+    const standardTypes = ['Ally', 'Enemy', 'Animal', 'Object', 'Area'];
     for (const type of standardTypes) {
       if (appliedTo.toLowerCase().includes(type.toLowerCase())) return type;
     }
-    // Default: assume it's a named target, likely Companion
-    return 'Companion';
+    // Default: assume it's a named target, likely Ally
+    return 'Ally';
   };
 
   const targetType = getTargetType(roll.appliedTo || 'Self');
@@ -1368,12 +1367,9 @@ function TropeCard({ roll, onToggleExpired, onDelete, onCollectRefund, formatEff
       'Self': isPermanent
         ? 'border-purple-500 bg-gradient-to-br from-purple-100 to-indigo-100'
         : 'border-purple-400 bg-gradient-to-br from-purple-50 to-indigo-50',
-      'Companion': isPermanent
+      'Ally': isPermanent
         ? 'border-blue-500 bg-gradient-to-br from-blue-100 to-cyan-100'
         : 'border-blue-400 bg-gradient-to-br from-blue-50 to-cyan-50',
-      'Ally': isPermanent
-        ? 'border-green-500 bg-gradient-to-br from-green-100 to-emerald-100'
-        : 'border-green-400 bg-gradient-to-br from-green-50 to-emerald-50',
       'Enemy': isPermanent
         ? 'border-red-500 bg-gradient-to-br from-red-100 to-orange-100'
         : 'border-red-400 bg-gradient-to-br from-red-50 to-orange-50',

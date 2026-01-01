@@ -1,7 +1,7 @@
 // Unified trope data structure - single source of truth
 export interface TropeData {
   name: string;
-  targets: string[];  // Valid targets: Self, Companion, Ally, Enemy, Animal, Object, Area
+  targets: string[];  // Valid targets: Self, Ally, Ally, Enemy, Animal, Object, Area
   gender: string;     // Gender filter: 'any', 'masculine', 'feminine'
   contexts: string[]; // Contexts: 'Combat', 'Social', 'At Rest'
   description: string;
@@ -1192,13 +1192,13 @@ export const ALL_TROPES: TropeData[] = [
     subversionUrl: "https://tvtropes.org/pmwiki/pmwiki.php/Main/HardshipBreedsResentment",
   },
   {
-    name: "True Companions",
+    name: "True Allys",
     targets: ["Ally"],
     gender: "any",
     contexts: ["Social"],
     description: "Unbreakable bonds of loyalty and friendship. Will support each other no matter what.",
     usesOngoing: "Ongoing",
-    tvTropesUrl: "https://tvtropes.org/pmwiki/pmwiki.php/Main/TrueCompanions",
+    tvTropesUrl: "https://tvtropes.org/pmwiki/pmwiki.php/Main/TrueAllys",
     subversion: "Fair Weather Friends",
     subversionUrl: "https://tvtropes.org/pmwiki/pmwiki.php/Main/FairWeatherFriends",
   },
@@ -2560,13 +2560,13 @@ export const ALL_TROPES: TropeData[] = [
     subversion: "Sluggish Response",
   },
   {
-    name: "Loyal Animal Companion",
+    name: "Loyal Animal Ally",
     targets: ["Ally", "Creature"],
     gender: "any",
     contexts: ["At Rest"],
     description: "Devoted animal friend. Faithful beast ally.",
     usesOngoing: "Ongoing",
-    tvTropesUrl: "https://tvtropes.org/pmwiki/pmwiki.php/Main/LoyalAnimalCompanion",
+    tvTropesUrl: "https://tvtropes.org/pmwiki/pmwiki.php/Main/LoyalAnimalAlly",
     subversion: "Right-Hand Cat",
     subversionUrl: "https://tvtropes.org/pmwiki/pmwiki.php/Main/RightHandCat",
   },
@@ -2665,7 +2665,7 @@ export const ALL_TROPES: TropeData[] = [
     targets: ["Ally"],
     gender: "any",
     contexts: ["At Rest"],
-    description: "Companion senses what humans miss. Reliable intuitive warnings.",
+    description: "Ally senses what humans miss. Reliable intuitive warnings.",
     usesOngoing: "Ongoing",
     tvTropesUrl: "https://tvtropes.org/pmwiki/pmwiki.php/Main/UncannyAnimalInstincts",
     subversion: "Domesticated Dependence",
@@ -2675,7 +2675,7 @@ export const ALL_TROPES: TropeData[] = [
     targets: ["Ally", "Human"],
     gender: "any",
     contexts: ["At Rest"],
-    description: "Companion emphasizing owner's status. Authority figure's pet.",
+    description: "Ally emphasizing owner's status. Authority figure's pet.",
     usesOngoing: "Ongoing",
     tvTropesUrl: "https://tvtropes.org/pmwiki/pmwiki.php/Main/RighthandCat",
     subversion: "Loyal Dog",
@@ -2685,7 +2685,7 @@ export const ALL_TROPES: TropeData[] = [
     targets: ["Ally", "Creature"],
     gender: "any",
     contexts: ["At Rest"],
-    description: "Companion performing brave protective acts. Canine heroism.",
+    description: "Ally performing brave protective acts. Canine heroism.",
     usesOngoing: "Ongoing",
     tvTropesUrl: "https://tvtropes.org/pmwiki/pmwiki.php/Main/HeroicDog",
     subversion: "Villainous Cat",
@@ -2695,7 +2695,7 @@ export const ALL_TROPES: TropeData[] = [
     targets: ["Self", "Ally", "Human"],
     gender: "any",
     contexts: ["At Rest"],
-    description: "Companion adopted by entire group. Shared emotional support.",
+    description: "Ally adopted by entire group. Shared emotional support.",
     usesOngoing: "Ongoing",
     tvTropesUrl: "https://tvtropes.org/pmwiki/pmwiki.php/Main/TeamPet",
     subversion: "Team Pest",
@@ -3717,7 +3717,7 @@ export const ALL_TROPES: TropeData[] = [
   },
   {
     name: "The Cheerleader",
-    targets: ["Companion", "Ally"],
+    targets: ["Ally", "Ally"],
     gender: "any",
     contexts: ["Combat", "Social", "At Rest"],
     description: "Boosting team morale and performance through encouragement. Supportive presence enhances allies' confidence and abilities.",
@@ -3728,7 +3728,7 @@ export const ALL_TROPES: TropeData[] = [
   },
   {
     name: "The Spotter",
-    targets: ["Companion", "Ally"],
+    targets: ["Ally", "Ally"],
     gender: "any",
     contexts: ["Combat", "At Rest"],
     description: "Identifies targets and provides tactical information during engagements. Helps allies locate enemies and weak points.",
@@ -3738,7 +3738,7 @@ export const ALL_TROPES: TropeData[] = [
   },
   {
     name: "Tag Team Specialist",
-    targets: ["Companion", "Ally"],
+    targets: ["Ally", "Ally"],
     gender: "any",
     contexts: ["At Rest"],
     description: "Excels at coordinated attacks with partners. Can seamlessly combine efforts with allies for devastating combo maneuvers.",
@@ -3749,7 +3749,7 @@ export const ALL_TROPES: TropeData[] = [
   },
   {
     name: "The Conscience",
-    targets: ["Companion", "Ally"],
+    targets: ["Ally", "Ally"],
     gender: "any",
     contexts: ["At Rest"],
     description: "Provides moral guidance and ethical perspective to the team. Helps others make principled decisions and stay true to values.",
@@ -3760,7 +3760,7 @@ export const ALL_TROPES: TropeData[] = [
   },
   {
     name: "Walking Encyclopedia",
-    targets: ["Companion", "Ally"],
+    targets: ["Ally", "Ally"],
     gender: "any",
     contexts: ["At Rest"],
     description: "Vast repository of factual knowledge on countless subjects. Can recall obscure information and provide expert explanations.",
@@ -3771,7 +3771,7 @@ export const ALL_TROPES: TropeData[] = [
   },
   {
     name: "The Lookout",
-    targets: ["Companion", "Ally"],
+    targets: ["Ally", "Ally"],
     gender: "any",
     contexts: ["Combat", "Social", "At Rest"],
     description: "Keeps watch for approaching danger or observers. Provides early warning when threats approach.",
@@ -3781,7 +3781,7 @@ export const ALL_TROPES: TropeData[] = [
   },
   {
     name: "Shared Experience",
-    targets: ["Companion", "Ally"],
+    targets: ["Ally", "Ally"],
     gender: "any",
     contexts: ["At Rest"],
     description: "Creates bonds through common trials and adventures. Mutual understanding from experiencing events together.",
@@ -3791,7 +3791,7 @@ export const ALL_TROPES: TropeData[] = [
   },
   {
     name: "The Translator",
-    targets: ["Companion", "Ally"],
+    targets: ["Ally", "Ally"],
     gender: "any",
     contexts: ["At Rest"],
     description: "Fluent in multiple languages and can interpret between speakers. Bridges communication gaps across different tongues and dialects.",
@@ -3802,7 +3802,7 @@ export const ALL_TROPES: TropeData[] = [
   },
   {
     name: "Local Guide",
-    targets: ["Companion", "Ally"],
+    targets: ["Ally", "Ally"],
     gender: "any",
     contexts: ["At Rest"],
     description: "Knows the area intimately and can navigate effectively. Familiar with shortcuts, landmarks, and local customs.",
@@ -3812,7 +3812,7 @@ export const ALL_TROPES: TropeData[] = [
   },
   {
     name: "The Networker",
-    targets: ["Companion", "Ally"],
+    targets: ["Ally", "Ally"],
     gender: "any",
     contexts: ["At Rest"],
     description: "Maintains extensive web of social connections and contacts. Knows someone useful in almost any situation or location.",
@@ -3823,7 +3823,7 @@ export const ALL_TROPES: TropeData[] = [
   },
   {
     name: "Emergency Medic",
-    targets: ["Companion", "Ally"],
+    targets: ["Ally", "Ally"],
     gender: "any",
     contexts: ["Combat", "At Rest"],
     description: "Skilled at providing critical medical care under pressure. Can stabilize injuries and save lives in dangerous situations.",
@@ -3834,7 +3834,7 @@ export const ALL_TROPES: TropeData[] = [
   },
   {
     name: "Tech Support",
-    targets: ["Companion", "Ally"],
+    targets: ["Ally", "Ally"],
     gender: "any",
     contexts: ["Combat", "Social", "At Rest"],
     description: "Expert with technology and digital systems. Can hack, repair, or operate complex technical equipment.",
@@ -3845,7 +3845,7 @@ export const ALL_TROPES: TropeData[] = [
   },
   {
     name: "The Motivator",
-    targets: ["Companion", "Ally"],
+    targets: ["Ally", "Ally"],
     gender: "any",
     contexts: ["Combat", "Social", "At Rest"],
     description: "Inspires others to push beyond their perceived limits. Encouraging words and presence drive teammates to achieve more.",
@@ -3856,7 +3856,7 @@ export const ALL_TROPES: TropeData[] = [
   },
   {
     name: "Supply Buddy",
-    targets: ["Companion", "Ally"],
+    targets: ["Ally", "Ally"],
     gender: "any",
     contexts: ["At Rest"],
     description: "Manages and distributes resources and equipment effectively. Ensures team has needed supplies when required.",
@@ -3866,7 +3866,7 @@ export const ALL_TROPES: TropeData[] = [
   },
   {
     name: "The Decoy",
-    targets: ["Companion", "Ally"],
+    targets: ["Ally", "Ally"],
     gender: "any",
     contexts: ["Combat", "At Rest"],
     description: "Draws enemy attention away from allies through misdirection. Creates false targets or distractions to protect the team.",
@@ -3877,7 +3877,7 @@ export const ALL_TROPES: TropeData[] = [
   },
   {
     name: "Covering Fire",
-    targets: ["Companion", "Ally"],
+    targets: ["Ally", "Ally"],
     gender: "any",
     contexts: ["Combat", "At Rest"],
     description: "Suppressive attacks that protect allies during movement or action. Keeps enemies pinned while teammates advance or retreat.",
@@ -3888,7 +3888,7 @@ export const ALL_TROPES: TropeData[] = [
   },
   {
     name: "Tactical Advisor",
-    targets: ["Companion", "Ally"],
+    targets: ["Ally", "Ally"],
     gender: "any",
     contexts: ["Combat", "At Rest"],
     description: "Provides strategic analysis and tactical recommendations. Can assess situations and suggest optimal courses of action.",
@@ -3899,7 +3899,7 @@ export const ALL_TROPES: TropeData[] = [
   },
   {
     name: "Lucky Charm",
-    targets: ["Companion", "Ally"],
+    targets: ["Ally", "Ally"],
     gender: "any",
     contexts: ["Combat", "Social", "At Rest"],
     description: "Presence brings good fortune to nearby allies. Things tend to work out favorably when this person is around.",
@@ -3910,7 +3910,7 @@ export const ALL_TROPES: TropeData[] = [
   },
   {
     name: "Emotional Anchor",
-    targets: ["Companion", "Ally"],
+    targets: ["Ally", "Ally"],
     gender: "any",
     contexts: ["Combat", "Social", "At Rest"],
     description: "Provides emotional stability and keeps allies grounded. Calming influence prevents teammates from losing control or hope.",
@@ -3921,7 +3921,7 @@ export const ALL_TROPES: TropeData[] = [
   },
   {
     name: "The Mechanic",
-    targets: ["Companion", "Ally"],
+    targets: ["Ally", "Ally"],
     gender: "any",
     contexts: ["Combat", "At Rest"],
     description: "Expert at repairing and maintaining equipment and vehicles. Can fix broken gear or jury-rig solutions from available parts.",
@@ -3932,7 +3932,7 @@ export const ALL_TROPES: TropeData[] = [
   },
   {
     name: "Pack Mule",
-    targets: ["Companion", "Ally"],
+    targets: ["Ally", "Ally"],
     gender: "any",
     contexts: ["Combat", "At Rest"],
     description: "Carries heavy loads and equipment for the team. Exceptional strength or endurance for transporting gear.",
@@ -3942,7 +3942,7 @@ export const ALL_TROPES: TropeData[] = [
   },
   {
     name: "Night Watch",
-    targets: ["Companion", "Ally"],
+    targets: ["Ally", "Ally"],
     gender: "any",
     contexts: ["Combat", "At Rest"],
     description: "Guards camp while others rest and maintains vigilance through the night. Protects sleeping allies from surprise attacks.",
@@ -3952,7 +3952,7 @@ export const ALL_TROPES: TropeData[] = [
   },
   {
     name: "Inspiring Presence",
-    targets: ["Companion", "Ally"],
+    targets: ["Ally", "Ally"],
     gender: "any",
     contexts: ["Combat", "Social", "At Rest"],
     description: "Mere presence uplifts and emboldens those nearby. Aura of confidence and determination spreads to allies passively.",
@@ -3963,7 +3963,7 @@ export const ALL_TROPES: TropeData[] = [
   },
   {
     name: "Intimidating Silhouette",
-    targets: ["Self", "Companion"],
+    targets: ["Self", "Ally"],
     gender: "any",
     contexts: ["Social", "At Rest"],
     description: "Imposing figure casts a menacing shadow that unnerves observers. Visual presence alone can frighten and discourage opposition.",
@@ -3974,7 +3974,7 @@ export const ALL_TROPES: TropeData[] = [
   },
   {
     name: "Heroic Build",
-    targets: ["Self", "Companion"],
+    targets: ["Self", "Ally"],
     gender: "masculine",
     contexts: ["Social", "At Rest"],
     description: "Body transforms to display idealized muscular and powerful physique. Instant bodybuilder aesthetic.",
@@ -3985,7 +3985,7 @@ export const ALL_TROPES: TropeData[] = [
   },
   {
     name: "Amazonian Beauty",
-    targets: ["Self", "Companion"],
+    targets: ["Self", "Ally"],
     gender: "any",
     contexts: ["Social", "At Rest"],
     description: "Striking appearance combining physical strength with aesthetic appeal. Muscular build enhances rather than diminishes attractiveness.",
@@ -3996,7 +3996,7 @@ export const ALL_TROPES: TropeData[] = [
   },
   {
     name: "Bishonen",
-    targets: ["Self", "Companion"],
+    targets: ["Self", "Ally"],
     gender: "masculine",
     contexts: ["Social", "At Rest"],
     description: "Ethereally beautiful masculine appearance with delicate, androgynous features. Graceful aesthetic that captivates observers.",
@@ -4007,7 +4007,7 @@ export const ALL_TROPES: TropeData[] = [
   },
   {
     name: "Little Bit Beastly",
-    targets: ["Self", "Companion"],
+    targets: ["Self", "Ally"],
     gender: "any",
     contexts: ["Social", "At Rest"],
     description: "Possesses minor animal features like ears, tail, or fangs. Mostly human with subtle bestial characteristics.",
@@ -4018,7 +4018,7 @@ export const ALL_TROPES: TropeData[] = [
   },
   {
     name: "Winged Humanoid",
-    targets: ["Self", "Companion"],
+    targets: ["Self", "Ally"],
     gender: "any",
     contexts: ["Social", "At Rest"],
     description: "Functional wings growing from back or shoulders enabling flight. Can soar through the air with natural aerial mobility.",
@@ -4029,7 +4029,7 @@ export const ALL_TROPES: TropeData[] = [
   },
   {
     name: "Prehensile Tail",
-    targets: ["Self", "Companion"],
+    targets: ["Self", "Ally"],
     gender: "any",
     contexts: ["Social", "At Rest"],
     description: "Fully functional tail capable of grasping and manipulating objects. Acts as an additional limb for enhanced dexterity.",
@@ -4062,7 +4062,7 @@ export const ALL_TROPES: TropeData[] = [
   },
   {
     name: "The Nondescript",
-    targets: ["Companion", "Ally"],
+    targets: ["Ally", "Ally"],
     gender: "any",
     contexts: ["Social", "At Rest"],
     description: "Naturally forgettable and able to blend seamlessly into any crowd. People's eyes glaze over and memories fade quickly.",

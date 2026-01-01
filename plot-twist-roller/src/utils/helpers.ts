@@ -98,8 +98,7 @@ export const getRandomTrope = (filters: TropeFilters): TropeData => {
 
   const targetMap: { [key: string]: string[] } = {
     'Self': ['Self', 'Human'],
-    'Companion': ['Companion'],
-    'Ally': ['Ally', 'Human'],
+    'Ally': ['Ally', 'Companion', 'Human'],
     'Enemy': ['Enemy', 'Human'],
     'Animal': ['Creature'],
     'Object': ['Object'],
